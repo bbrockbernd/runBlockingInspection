@@ -7,11 +7,17 @@ import org.jetbrains.kotlin.psi.KtNamedFunction
 
 class ElementFilters {
     companion object {
-        val runBlockingFilter = PsiElementFilter {el ->
+        val runBlockingBuilder = PsiElementFilter { el ->
             if (el is KtCallExpression) {
                 val callee = el.calleeExpression
-                if (callee is KtNameReferenceExpression)
-                    return@PsiElementFilter callee.getReferencedName() == "runBlocking"
+                if (callee is KtNameReferenceExpression){
+                    if (callee.getReferencedName() == "runBlocking") {
+                        val funDef = callee.reference?.resolve()
+                        if (funDef is KtNamedFunction) {
+                            return@PsiElementFilter funDef.fqName?.toString() == "kotlinx.coroutines.runBlocking"
+                        }
+                    }
+                }
             }
             false
         }
@@ -23,5 +29,34 @@ class ElementFilters {
             return@PsiElementFilter false
         }
         
+        val launchBuilder = PsiElementFilter { el ->
+            if (el is KtCallExpression) {
+                val callee = el.calleeExpression
+                if (callee is KtNameReferenceExpression){
+                    if (callee.getReferencedName() == "launch") {
+                        val funDef = callee.reference?.resolve()
+                        if (funDef is KtNamedFunction) {
+                            return@PsiElementFilter funDef.fqName?.toString() == "kotlinx.coroutines.launch"
+                        }
+                    }
+                }
+            }
+            false
+        }
+        
+        val asyncBuilder = PsiElementFilter { el ->
+            if (el is KtCallExpression) {
+                val callee = el.calleeExpression
+                if (callee is KtNameReferenceExpression){
+                    if (callee.getReferencedName() == "async") {
+                        val funDef = callee.reference?.resolve()
+                        if (funDef is KtNamedFunction) {
+                            return@PsiElementFilter funDef.fqName?.toString() == "kotlinx.coroutines.async"
+                        }
+                    }
+                }
+            }
+            false
+        }
     }
 }
