@@ -15,6 +15,7 @@ import org.jetbrains.kotlin.idea.KotlinFileType
 import org.jetbrains.kotlin.psi.KtCallExpression
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtNamedFunction
+import org.jetbrains.kotlin.util.collectionUtils.concat
 
 internal class DetectRunBlockingServiceImpl(override val project: Project) : DetectRunBlockingService, ProblemsProvider {
     private val relevantFiles = mutableListOf<VirtualFile>()
@@ -57,18 +58,32 @@ internal class DetectRunBlockingServiceImpl(override val project: Project) : Det
         fullAnalysis()
         checkAllRunBlockings()
     }
+
+    override fun getRunBlockingInCoroutines(file: VirtualFile): List<PsiElement> {
+        return checkRunBlockingsForFile(file)
+    }
     
-    private fun checkAllRunBlockings() {
-        rbFiles.forEachIndexed() { index, file ->
-            println("Checking RBs: $index / ${rbFiles.size}")
-            findRunBlockings(file).forEach { rb ->
-                val path = isInAsyncContext(rb)
-                if (path != null) {
-                    val lineNr = getLineNumber(rb)
-                    println("RB in async context in file ${file.path} at line $lineNr, comes from $path")
-                }
+    private fun checkRunBlockingsForFile(file: VirtualFile): List<PsiElement> {
+        if (!rbFiles.contains(file)) return emptyList()
+        val rbs: MutableList<PsiElement> = mutableListOf()
+        findRunBlockings(file).forEach { rb ->
+            val path = isInAsyncContext(rb)
+            if (path != null) {
+                val lineNr = getLineNumber(rb)
+                rbs.add(rb)
+                println("RB in async context in file ${file.path} at line $lineNr, comes from $path")
             }
         }
+        return rbs
+    }
+
+    private fun checkAllRunBlockings(): List<PsiElement> {
+        val rbs: MutableList<PsiElement> = mutableListOf()
+        rbFiles.forEachIndexed() { index, file ->
+            println("Checking RBs: $index / ${rbFiles.size}")
+            rbs.concat(checkRunBlockingsForFile(file))
+        }
+        return rbs
     }
     
     private fun getLineNumber(psiElement: PsiElement) : Int {

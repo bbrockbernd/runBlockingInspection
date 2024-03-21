@@ -1,5 +1,6 @@
 package com.example.simplerbdetection.Services
 
+import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiElement
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtNamedFunction
@@ -10,5 +11,6 @@ interface DetectRunBlockingService {
     fun isAsyncMarkedFunction(element: KtNamedFunction): Boolean
     fun fileUpdate(element: KtFile)
     fun analyseProject()
+    fun getRunBlockingInCoroutines(virtualFile: VirtualFile): List<PsiElement>
     
 }

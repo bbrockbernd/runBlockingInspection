@@ -28,7 +28,15 @@
     <extensions defaultExtensionNs="com.intellij">
         <projectService serviceImplementation="com.example.simplerbdetection.Services.DetectRunBlockingServiceImpl"
                         serviceInterface="com.example.simplerbdetection.Services.DetectRunBlockingService"/>
-        <annotator language="kotlin" implementationClass="com.example.simplerbdetection.Annotators.RunBlockingAnnotator"/>
+<!--        <annotator language="kotlin" implementationClass="com.example.simplerbdetection.Annotators.RunBlockingAnnotator"/>-->
+        <globalInspection groupPath="Kotlin" language="kotlin"
+                          shortName="RunBlocking"
+                          displayName="RunBlocking inspection"
+                          groupName="Deadlock inspections"
+                          enabledByDefault="true"
+                          level="WARNING"
+                          implementationClass="com.example.simplerbdetection.RunBlockingInspection">
+        </globalInspection>
 
     </extensions>
     
