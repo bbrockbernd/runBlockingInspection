@@ -1,8 +1,25 @@
 package com.example.simplerbdetection.CallGraph
 
+import com.example.simplerbdetection.ElementFilters
+import com.example.simplerbdetection.MyPsiUtils
 import org.jetbrains.kotlin.psi.KtNamedFunction
 
-class FunctionNode(val id: String, val filePath: String) {
+class FunctionNode(
+    val id: String, 
+    val filePath: String,
+    val fqName: String,
+    val lineNr: Int,
+    val isSuspend: Boolean
+) {
+    
+    constructor(psiFun: KtNamedFunction) : this (
+        generateId(psiFun), 
+        psiFun.containingFile.virtualFile.path,
+        psiFun.fqName.toString(),
+        MyPsiUtils.getLineNumber(psiFun),
+        ElementFilters.suspendFun.isAccepted(psiFun)
+        )
+    
     val children = mutableSetOf<FunctionNode>()
     val parents = mutableSetOf<FunctionNode>()
     var asyncContext = true

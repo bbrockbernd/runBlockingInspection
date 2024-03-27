@@ -7,10 +7,12 @@ import org.jetbrains.kotlin.psi.KtNamedFunction
 
 interface DetectRunBlockingService {
     
-    fun isInAsyncContext(element: PsiElement): String?
+    fun isInAsyncContext(element: PsiElement): List<String>?
     fun isAsyncMarkedFunction(element: KtNamedFunction): Boolean
     fun fileUpdate(element: KtFile)
     fun analyseProject()
-    fun getRunBlockingInCoroutines(virtualFile: VirtualFile): List<PsiElement>
-    
+    fun getRunBlockingInCoroutines(virtualFile: VirtualFile): List<RunBlockingProblem>
+    fun wholeProject(): List<RunBlockingProblem>
+    data class RunBlockingProblem(val element: PsiElement, val stacTrace: List<String>)
 }
+

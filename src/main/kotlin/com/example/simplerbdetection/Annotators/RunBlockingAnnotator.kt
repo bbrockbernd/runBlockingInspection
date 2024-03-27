@@ -1,9 +1,11 @@
 package com.example.simplerbdetection.Annotators
 
 import com.example.simplerbdetection.ElementFilters
+import com.example.simplerbdetection.Services.DetectRunBlockingService
 import com.intellij.lang.annotation.AnnotationHolder
 import com.intellij.lang.annotation.Annotator
 import com.intellij.lang.annotation.HighlightSeverity
+import com.intellij.openapi.components.service
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiRecursiveElementVisitor
 import com.intellij.psi.util.PsiTreeUtil
@@ -12,7 +14,13 @@ import org.jetbrains.kotlin.psi.KtNamedFunction
 
 class RunBlockingAnnotator : Annotator {
     //TODO do annotation from method decl to body aka search for runblockings from method, dont search for method from runblocking.
-    override fun annotate(element: PsiElement, holder: AnnotationHolder) { 
+    override fun annotate(element: PsiElement, holder: AnnotationHolder) {
+        if (ElementFilters.runBlockingBuilderInvocation.isAccepted(element)) {
+            val result = element.project.service<DetectRunBlockingService>().isInAsyncContext(element)
+            if (result != null) {
+                holder.rbAnnotate(element)
+            }
+        }
 //        if (element is KtNamedFunction) {
 //            println("Annotator called")
 //            if (element.project.service<DetectRunBlockingService>().isAsyncMarkedFunction(element)) {
@@ -25,7 +33,7 @@ class RunBlockingAnnotator : Annotator {
         val runBlockingList = mutableListOf<PsiElement>()
         element.accept(object: PsiRecursiveElementVisitor() {
             override fun visitElement(element: PsiElement) {
-                if (ElementFilters.runBlockingBuilder.isAccepted(element)) runBlockingList.add(element)
+                if (ElementFilters.runBlockingBuilderInvocation.isAccepted(element)) runBlockingList.add(element)
                 super.visitElement(element)
             }
         })
@@ -33,7 +41,7 @@ class RunBlockingAnnotator : Annotator {
     }
     
     private fun hasRunBlockingParent(element: PsiElement): Boolean 
-            = PsiTreeUtil.findFirstParent(element.parent) { ElementFilters.runBlockingBuilder.isAccepted(it) } != null
+            = PsiTreeUtil.findFirstParent(element.parent) { ElementFilters.runBlockingBuilderInvocation.isAccepted(it) } != null
     
     private fun hasSuspendParent(element: PsiElement): Boolean
             = PsiTreeUtil.findFirstParent(element.parent) { ElementFilters.suspendFun.isAccepted(it) } != null

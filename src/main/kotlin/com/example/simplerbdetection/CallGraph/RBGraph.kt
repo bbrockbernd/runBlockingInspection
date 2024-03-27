@@ -1,5 +1,8 @@
 package com.example.simplerbdetection.CallGraph
 
+import com.example.simplerbdetection.MyPsiUtils
+import com.intellij.psi.PsiElement
+import org.jetbrains.kotlin.psi.KtNamedFunction
 import java.util.*
 
 class RBGraph {
@@ -11,16 +14,19 @@ class RBGraph {
        fileMap.clear() 
     }
     
-    fun addBuilder(filePath: String): FunctionNode {
-        val functionNode: FunctionNode = getOrAddToFM("__COR_BUILDER_${UUID.randomUUID()}", filePath)
+    fun addBuilder(psiElement: PsiElement): FunctionNode {
+        val filePath = psiElement.containingFile.virtualFile.path
+        val functionNode: FunctionNode = getOrAddBuilderToFM("__COR_BUILDER_${UUID.randomUUID()}", filePath, "__COR_BUILDER", MyPsiUtils.getLineNumber(psiElement))
         addToFileMap(functionNode, filePath)
         functionNode.isBuilder = true
         return functionNode
     }
     
-    fun getOrCreateFunction(id: String, filePath: String): FunctionNode {
+    fun getOrCreateFunction(func: KtNamedFunction): FunctionNode {
+        val id = FunctionNode.generateId(func)
+        val filePath = func.containingFile.virtualFile.path
         return functionMap.getOrPut(id) {
-            val node = FunctionNode(id, filePath)
+            val node = FunctionNode(func)
             addToFileMap(node, filePath)
             node
         }
@@ -31,7 +37,7 @@ class RBGraph {
         return functionMap[id]!!
     }
     
-    fun findBuilder(start: FunctionNode): FunctionNode {
+    fun findBuilderDFS(start: FunctionNode): FunctionNode {
         // Set all visited to false
         functionMap.values.forEach { it.visited = false }
         var currentNode = start
@@ -41,9 +47,38 @@ class RBGraph {
         }
         return currentNode
     }
+
+    fun findBuilderBFS(start: FunctionNode): List<FunctionNode> {
+        // Set all visited to false
+        val cameFrom: MutableMap<FunctionNode, FunctionNode> = mutableMapOf()
+        
+        functionMap.values.forEach { it.visited = false }
+        val queue: Queue<FunctionNode> = LinkedList()
+        queue.add(start)
+        var builderNode = start
+        while (!queue.isEmpty()) {
+            val currentNode = queue.poll()
+            if (currentNode.isBuilder || currentNode.isSuspend) {
+                builderNode = currentNode
+                break
+            }
+            currentNode.visited = true
+            val unexploredParents = currentNode.parents.filter { !it.visited }
+            queue.addAll(unexploredParents)
+            unexploredParents.forEach { cameFrom[it] = currentNode }
+        }
+        
+        var backWardsNode = builderNode
+        val traceAccumulator: MutableList<FunctionNode> = mutableListOf(backWardsNode)
+        while (backWardsNode != start) {
+            backWardsNode = cameFrom[backWardsNode]!!
+            traceAccumulator.add(backWardsNode)
+        }
+        return traceAccumulator
+    }
     
-    private fun getOrAddToFM(id: String, filePath: String): FunctionNode {
-        return functionMap.getOrPut(id) { FunctionNode(id, filePath) }
+    private fun getOrAddBuilderToFM(id: String, filePath: String, fqName: String, lineNr: Int): FunctionNode {
+        return functionMap.getOrPut(id) { FunctionNode(id, filePath, fqName, lineNr, false) }
     }
     
     private fun addToFileMap(fn: FunctionNode, filePath: String) {

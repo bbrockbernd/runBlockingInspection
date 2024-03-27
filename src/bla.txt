@@ -8,3 +8,19 @@ https://github.com/mozilla-mobile/firefox-android/commit/278db960c154b7cddbe1a8b
 https://github.com/mozilla-mobile/firefox-android/commit/523b46d308765f23ae2b8e891aa2a9e8c194a659 (not sure but runBlocking is involved )
 https://github.com/mozilla-mobile/firefox-android/commit/9062d7f82fb3b9c41cc18c3303b0b367deabde72
 https://gitlab.com/jshaw29/tachiyomi-backup/-/commit/6aee4fc464d957ba30a86fc3d13fad397c6abc95?view=parallel
+
+
+
+
+deadlock2-android-components
+9 total
+1 FP
+1 Difficult to validate
+7 TP
+
+deadlock1_delete_and_quit
+1 total
+1 TP
+
+tachiyomi is very difficult to get to work, due to online dependencies being removed
+

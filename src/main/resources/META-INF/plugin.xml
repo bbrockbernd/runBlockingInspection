@@ -32,7 +32,7 @@
         <globalInspection groupPath="Kotlin" language="kotlin"
                           shortName="RunBlocking"
                           displayName="RunBlocking inspection"
-                          groupName="Deadlock inspections"
+                          groupName="Coroutine inspections"
                           enabledByDefault="true"
                           level="WARNING"
                           implementationClass="com.example.simplerbdetection.RunBlockingInspection">
@@ -48,6 +48,10 @@
                 description="Start deadlock detection">
             <add-to-group group-id="CodeMenu" anchor="first"/>
             
+        </action>
+        <action id="com.example.simplerbdetection.Actions.TestButton"
+                class="com.example.simplerbdetection.Actions.TestButton" text="TestButton" description="Testtesttest">
+            <add-to-group group-id="CodeMenu" anchor="first"/>
         </action>
     </actions>
     

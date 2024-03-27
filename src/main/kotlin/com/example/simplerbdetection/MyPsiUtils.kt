@@ -20,6 +20,10 @@ class MyPsiUtils {
         fun findAllChildren(startElement: PsiElement, condition: (PsiElement) -> Boolean): List<PsiElement>{
           return findAllChildren(startElement, condition) { false }
         }
+        fun getLineNumber(psiElement: PsiElement) : Int {
+            val document = psiElement.containingFile.viewProvider.document
+            return document?.getLineNumber(psiElement.textRange.startOffset)?.plus(1) ?: -1
+        }
         
     }
 }
