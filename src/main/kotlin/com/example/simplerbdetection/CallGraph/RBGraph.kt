@@ -16,7 +16,7 @@ class RBGraph {
     
     fun addBuilder(psiElement: PsiElement): FunctionNode {
         val filePath = psiElement.containingFile.virtualFile.path
-        val functionNode: FunctionNode = getOrAddBuilderToFM("__COR_BUILDER_${UUID.randomUUID()}", filePath, "__COR_BUILDER", MyPsiUtils.getLineNumber(psiElement))
+        val functionNode: FunctionNode = getOrAddBuilderToFM("__COR_BUILDER_${UUID.randomUUID()}", MyPsiUtils.getUrl(psiElement)?: "", "__COR_BUILDER")
         addToFileMap(functionNode, filePath)
         functionNode.isBuilder = true
         return functionNode
@@ -35,17 +35,6 @@ class RBGraph {
     fun containsFun(id: String): Boolean = functionMap.contains(id)
     fun getFunction(id: String): FunctionNode {
         return functionMap[id]!!
-    }
-    
-    fun findBuilderDFS(start: FunctionNode): FunctionNode {
-        // Set all visited to false
-        functionMap.values.forEach { it.visited = false }
-        var currentNode = start
-        while (!currentNode.isBuilder) {
-            currentNode.visited = true
-            currentNode = currentNode.parents.first { !it.visited }
-        }
-        return currentNode
     }
 
     fun findBuilderBFS(start: FunctionNode): List<FunctionNode> {
@@ -77,8 +66,8 @@ class RBGraph {
         return traceAccumulator
     }
     
-    private fun getOrAddBuilderToFM(id: String, filePath: String, fqName: String, lineNr: Int): FunctionNode {
-        return functionMap.getOrPut(id) { FunctionNode(id, filePath, fqName, lineNr, false) }
+    private fun getOrAddBuilderToFM(id: String, declerationSite: String, fqName: String): FunctionNode {
+        return functionMap.getOrPut(id) { FunctionNode(id, declerationSite, fqName, false) }
     }
     
     private fun addToFileMap(fn: FunctionNode, filePath: String) {

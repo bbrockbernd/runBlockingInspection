@@ -35,9 +35,10 @@
                           groupName="Coroutine inspections"
                           enabledByDefault="true"
                           level="WARNING"
-                          implementationClass="com.example.simplerbdetection.RunBlockingInspection">
+                          implementationClass="com.example.simplerbdetection.RunBlockingInspection"
+                          presentation="com.example.simplerbdetection.RunBlockingInspectionPresentation">
         </globalInspection>
-
+<!--        <problemsViewPanelProvider implementation="com.example.simplerbdetection.views.RunBlockingView"/>-->
     </extensions>
     
     <actions>

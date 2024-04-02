@@ -26,8 +26,9 @@ internal class DetectRunBlockingServiceImpl(override val project: Project) : Det
     private val rbFiles = mutableSetOf<VirtualFile>()
     private val rbGraph = RBGraph()
 
-    override fun isInAsyncContext(element: PsiElement): List<String>? {
+    override fun isInAsyncContext(element: PsiElement): List<Pair<String, String>>? {
         
+        // TODO start trace possibly from suspend fun
         // Find first interesting parent if any, Aka function definition or async builder
         val psiFunOrBuilder = PsiTreeUtil.findFirstParent(element, true) { 
                     it is KtNamedFunction 
@@ -41,12 +42,18 @@ internal class DetectRunBlockingServiceImpl(override val project: Project) : Det
             // Check if function exists in graph (and therefore runs in coroutine)
             if (rbGraph.containsFun(FunctionNode.generateId(psiFunOrBuilder))) {
                 val funNode = rbGraph.getFunction(FunctionNode.generateId(psiFunOrBuilder))
-                // Check if node runs in coroutine TODO might be redundant and could be removed
-                // Then find one of the roots of this subtree and return its file
-                if (funNode.asyncContext) return rbGraph.findBuilderBFS(funNode).map{ "function ${it.fqName} at ${it.filePath}:${it.lineNr}" }
+                if (funNode.asyncContext) {
+                    val nodeTrace = rbGraph.findBuilderBFS(funNode)
+                    val stackTrace = mutableListOf<Pair<String, String>>(Pair(nodeTrace[0].fqName, nodeTrace[0].declarationSite))
+                    for (i in 1..<nodeTrace.size) {
+                        stackTrace.add(Pair(nodeTrace[i].fqName, nodeTrace[i-1].getCallSiteFor(nodeTrace[i])))
+                    }
+                    stackTrace.add(Pair("runBlocking", MyPsiUtils.getUrl(element)?: ""))
+                    return stackTrace
+                }  //map{ "function ${it.fqName} at ${it.filePath}:${it.lineNr}" }
                 return null
             }
-        } else if (psiFunOrBuilder != null) return listOf("Direct child of ${element.containingFile.virtualFile.path}:${MyPsiUtils.getLineNumber(psiFunOrBuilder)}")
+        } else if (psiFunOrBuilder != null) return listOf(Pair("Builder", MyPsiUtils.getUrl(psiFunOrBuilder)?: ""))
         return null
     }
 
@@ -61,7 +68,6 @@ internal class DetectRunBlockingServiceImpl(override val project: Project) : Det
 
     override fun analyseProject() {
         fullAnalysis()
-//        newFullAnalysis()
         wholeProject()
     }
 
@@ -71,6 +77,12 @@ internal class DetectRunBlockingServiceImpl(override val project: Project) : Det
 
     override fun wholeProject(): List<DetectRunBlockingService.RunBlockingProblem> {
         return rbFiles.fold(mutableListOf()) { results, file -> results.concat(checkRunBlockingsForFile(file))!!.toMutableList() } 
+    }
+
+    override fun isAsyncAndHasRunBlockings(psiElement: KtNamedFunction): List<DetectRunBlockingService.RunBlockingProblem> {
+        if (!isAsyncMarkedFunction(psiElement)) return listOf()
+        val rbs = MyPsiUtils.findAllChildren(psiElement) { ElementFilters.runBlockingBuilderInvocation.isAccepted(it) }
+        return rbs.mapNotNull { isInAsyncContext(it)?.let { trace -> DetectRunBlockingService.RunBlockingProblem(it, trace) } }
     }
 
     private fun checkRunBlockingsForFile(file: VirtualFile): List<DetectRunBlockingService.RunBlockingProblem> {
@@ -216,7 +228,7 @@ internal class DetectRunBlockingServiceImpl(override val project: Project) : Det
 
                 // Get or create function node and explore
                 val functionNode = rbGraph.getOrCreateFunction(psiFn)
-                FunctionNode.connect(currentNode, functionNode)
+                FunctionNode.connect(currentNode, functionNode, MyPsiUtils.getUrl(call)!!)
                 exploreFunDeclaration(psiFn, functionNode)
             }
         }
