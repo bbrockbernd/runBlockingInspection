@@ -18,9 +18,15 @@ deadlock2-android-components
 1 Difficult to validate
 7 TP
 
+
 deadlock1_delete_and_quit
 1 total
 1 TP
 
 tachiyomi is very difficult to get to work, due to online dependencies being removed
+
+ktor main
+11 total
+1 FP
+10 TP
 
