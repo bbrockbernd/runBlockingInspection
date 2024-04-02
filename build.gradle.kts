@@ -1,7 +1,7 @@
 plugins {
     id("java")
     id("org.jetbrains.kotlin.jvm") version "1.9.21"
-    id("org.jetbrains.intellij") version "1.16.1"
+    id("org.jetbrains.intellij") version "1.17.2"
 }
 
 group = "com.example"
@@ -31,6 +31,9 @@ tasks {
         kotlinOptions.jvmTarget = "17"
     }
 
+    runIde {
+        maxHeapSize = "8g"
+    }
     patchPluginXml {
         sinceBuild.set("231")
         untilBuild.set("241.*")
