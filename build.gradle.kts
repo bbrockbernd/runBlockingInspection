@@ -32,7 +32,7 @@ tasks {
     }
 
     runIde {
-        maxHeapSize = "8g"
+        maxHeapSize = "16g"
     }
     patchPluginXml {
         sinceBuild.set("231")
