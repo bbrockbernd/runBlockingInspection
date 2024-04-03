@@ -2,6 +2,7 @@ package com.example.simplerbdetection.CallGraph
 
 import com.example.simplerbdetection.MyPsiUtils
 import com.intellij.psi.PsiElement
+import org.jetbrains.kotlin.psi.KtCallExpression
 import org.jetbrains.kotlin.psi.KtNamedFunction
 import java.util.*
 
@@ -9,14 +10,19 @@ class RBGraph {
     private var functionMap = mutableMapOf<String, FunctionNode>()
     private val fileMap = mutableMapOf<String, MutableSet<FunctionNode>>()
     
-    fun clear(): Unit {
+    fun clear() {
        functionMap.clear()
        fileMap.clear() 
     }
     
     fun addBuilder(psiElement: PsiElement): FunctionNode {
+        if (psiElement !is KtCallExpression) throw IllegalArgumentException("Builder must be KtCallExpression")
         val filePath = psiElement.containingFile.virtualFile.path
-        val functionNode: FunctionNode = getOrAddBuilderToFM("__COR_BUILDER_${UUID.randomUUID()}", MyPsiUtils.getUrl(psiElement)?: "", "__COR_BUILDER")
+        val ktFun: KtNamedFunction = psiElement.calleeExpression?.reference?.resolve() as KtNamedFunction
+        val fqName: String = ktFun.fqName.toString()
+        val url = MyPsiUtils.getUrl(psiElement) ?: ""
+        
+        val functionNode: FunctionNode = getOrAddBuilderToFM("${fqName}_${url}", url, fqName)
         addToFileMap(functionNode, filePath)
         functionNode.isBuilder = true
         return functionNode
@@ -37,11 +43,19 @@ class RBGraph {
         return functionMap[id]!!
     }
 
+    /**
+     * Performs a breadth-first search starting from the given start node to find a builder or suspend node in the function graph.
+     *
+     * @param start The start node for the breadth-first search.
+     * @return A list of nodes representing the path from the start node to the builder node.
+     */
     fun findBuilderBFS(start: FunctionNode): List<FunctionNode> {
-        // Set all visited to false
+        // Map to backtrack traversed path
         val cameFrom: MutableMap<FunctionNode, FunctionNode> = mutableMapOf()
-        
+        // Set all visited to false
         functionMap.values.forEach { it.visited = false }
+        
+        // BFS
         val queue: Queue<FunctionNode> = LinkedList()
         queue.add(start)
         var builderNode = start
@@ -57,6 +71,7 @@ class RBGraph {
             unexploredParents.forEach { cameFrom[it] = currentNode }
         }
         
+        // Generate trace trough cameFrom backtrack map
         var backWardsNode = builderNode
         val traceAccumulator: MutableList<FunctionNode> = mutableListOf(backWardsNode)
         while (backWardsNode != start) {
@@ -74,6 +89,4 @@ class RBGraph {
         val set = fileMap.getOrPut(filePath) { mutableSetOf() }
         set.add(fn)
     }
-    
-    
 }

@@ -12,11 +12,12 @@ import com.intellij.psi.util.PsiTreeUtil
 import org.jetbrains.kotlin.psi.KtNameReferenceExpression
 import org.jetbrains.kotlin.psi.KtNamedFunction
 
+// Annotator is currently disabled
 class RunBlockingAnnotator : Annotator {
     //TODO do annotation from method decl to body aka search for runblockings from method, dont search for method from runblocking.
     override fun annotate(element: PsiElement, holder: AnnotationHolder) {
         if (ElementFilters.runBlockingBuilderInvocation.isAccepted(element)) {
-            val result = element.project.service<DetectRunBlockingService>().isInAsyncContext(element)
+            val result = element.project.service<DetectRunBlockingService>().analyzeRunBlocking(element)
             if (result != null) {
                 holder.rbAnnotate(element)
             }

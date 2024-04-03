@@ -10,10 +10,6 @@ import com.intellij.openapi.roots.ProjectFileIndex
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiManager
-import com.intellij.psi.search.FilenameIndex
-import com.intellij.psi.search.GlobalSearchScope
-import com.intellij.psi.search.searches.ReferencesSearch
-import com.intellij.psi.util.PsiElementFilter
 import com.intellij.psi.util.PsiTreeUtil
 import org.jetbrains.kotlin.idea.KotlinFileType
 import org.jetbrains.kotlin.psi.KtCallExpression
@@ -26,9 +22,16 @@ internal class DetectRunBlockingServiceImpl(override val project: Project) : Det
     private val rbFiles = mutableSetOf<VirtualFile>()
     private val rbGraph = RBGraph()
 
-    override fun isInAsyncContext(element: PsiElement): List<Pair<String, String>>? {
-        
-        // TODO start trace possibly from suspend fun
+    /**
+     * Analyzes the given [element] to determine if it is running inside a coroutine and returns a stack trace
+     * if it is. This method assumes [element] is runBlocking. 
+     * The stack trace is a potential call stack that could lead from a coroutine to this runBlocking.
+     *
+     * @param element The PSI element to analyze (runBlocking).
+     * @return A list of pairs representing the function name and its call/decl site if the given [element]
+     *         is running inside a coroutine, null otherwise.
+     */
+    override fun analyzeRunBlocking(element: PsiElement): List<Pair<String, String>>? {
         // Find first interesting parent if any, Aka function definition or async builder
         val psiFunOrBuilder = PsiTreeUtil.findFirstParent(element, true) { 
                     it is KtNamedFunction 
@@ -43,27 +46,24 @@ internal class DetectRunBlockingServiceImpl(override val project: Project) : Det
             if (rbGraph.containsFun(FunctionNode.generateId(psiFunOrBuilder))) {
                 val funNode = rbGraph.getFunction(FunctionNode.generateId(psiFunOrBuilder))
                 if (funNode.asyncContext) {
+                    // Find the shortest path from async primitive to this runBlocking
                     val nodeTrace = rbGraph.findBuilderBFS(funNode)
                     val stackTrace = mutableListOf<Pair<String, String>>(Pair(nodeTrace[0].fqName, nodeTrace[0].declarationSite))
                     for (i in 1..<nodeTrace.size) {
                         stackTrace.add(Pair(nodeTrace[i].fqName, nodeTrace[i-1].getCallSiteFor(nodeTrace[i])))
                     }
-                    stackTrace.add(Pair("runBlocking", MyPsiUtils.getUrl(element)?: ""))
+                    stackTrace.add(Pair("--> runBlocking", MyPsiUtils.getUrl(element)?: ""))
                     return stackTrace
-                }  //map{ "function ${it.fqName} at ${it.filePath}:${it.lineNr}" }
+                }  
                 return null
             }
-        } else if (psiFunOrBuilder != null) return listOf(Pair("Builder", MyPsiUtils.getUrl(psiFunOrBuilder)?: ""))
+            // else if element is builder
+        } else if (psiFunOrBuilder != null && psiFunOrBuilder is KtCallExpression) {
+            val ktFun: KtNamedFunction = psiFunOrBuilder.calleeExpression?.reference?.resolve() as KtNamedFunction
+            val fqName: String = ktFun.fqName.toString()
+            return listOf(Pair(fqName, MyPsiUtils.getUrl(psiFunOrBuilder)?: ""), Pair("--> runBlocking", MyPsiUtils.getUrl(element)?: ""))
+        }
         return null
-    }
-
-    override fun isAsyncMarkedFunction(element: KtNamedFunction): Boolean {
-        val funId = FunctionNode.generateId(element)
-        return rbGraph.containsFun(funId) && rbGraph.getFunction(funId).asyncContext
-    }
-
-    override fun fileUpdate(element: KtFile) {
-        TODO("Not yet implemented")
     }
 
     override fun analyseProject() {
@@ -71,25 +71,15 @@ internal class DetectRunBlockingServiceImpl(override val project: Project) : Det
         wholeProject()
     }
 
-    override fun getRunBlockingInCoroutines(file: VirtualFile): List<DetectRunBlockingService.RunBlockingProblem> {
-        return checkRunBlockingsForFile(file)
-    }
-
     override fun wholeProject(): List<DetectRunBlockingService.RunBlockingProblem> {
         return rbFiles.fold(mutableListOf()) { results, file -> results.concat(checkRunBlockingsForFile(file))!!.toMutableList() } 
-    }
-
-    override fun isAsyncAndHasRunBlockings(psiElement: KtNamedFunction): List<DetectRunBlockingService.RunBlockingProblem> {
-        if (!isAsyncMarkedFunction(psiElement)) return listOf()
-        val rbs = MyPsiUtils.findAllChildren(psiElement) { ElementFilters.runBlockingBuilderInvocation.isAccepted(it) }
-        return rbs.mapNotNull { isInAsyncContext(it)?.let { trace -> DetectRunBlockingService.RunBlockingProblem(it, trace) } }
     }
 
     private fun checkRunBlockingsForFile(file: VirtualFile): List<DetectRunBlockingService.RunBlockingProblem> {
         if (!rbFiles.contains(file)) return emptyList()
         val rbs: MutableList<DetectRunBlockingService.RunBlockingProblem> = mutableListOf()
         findRunBlockings(file).forEach { rb ->
-            val stackTrace = isInAsyncContext(rb)
+            val stackTrace = analyzeRunBlocking(rb)
             if (stackTrace != null) {
                 val lineNr = MyPsiUtils.getLineNumber(rb)
                 rbs.add(
@@ -101,74 +91,7 @@ internal class DetectRunBlockingServiceImpl(override val project: Project) : Det
         }
         return rbs
     }
-
-    private fun checkAllRunBlockings(): List<PsiElement> {
-        val rbs: MutableList<PsiElement> = mutableListOf()
-        rbFiles.forEachIndexed() { index, file ->
-            println("Checking RBs: $index / ${rbFiles.size}")
-            rbs.concat(checkRunBlockingsForFile(file))
-        }
-        return rbs
-    }
     
-    private fun newFullAnalysis() {
-        rbGraph.clear()
-        rbFiles.clear()
-        
-        updateRelevantFiles()
-
-        println("Searching for runBlocking builders")
-        val rbFun = findFunction(project, "Builders.kt", ElementFilters.runBlockingDeclarationFile, ElementFilters.runBlockingBuilderDeclaration)
-        val rbResults = ReferencesSearch
-            .search(rbFun, GlobalSearchScope.projectScope(project))
-            .filter { it.element.parent is KtCallExpression }.map {it.element}
-
-        println("Searching for launch builders")
-        // Find all launch builders in project
-        val launchFun = findFunction(project, "Builders.common.kt",ElementFilters.launchAndAsyncDeclarationFile, ElementFilters.launchBuilderDeclaration)
-        val launchResults = ReferencesSearch
-            .search(launchFun, GlobalSearchScope.projectScope(project))
-            .filter { it.element.parent is KtCallExpression }.map {it.element}
-
-        println("Searching for async builders")
-        // Find all async builders in project
-        val asyncFun = findFunction(project, "Builders.common.kt",ElementFilters.launchAndAsyncDeclarationFile, ElementFilters.asyncBuilderDeclaration)
-        val asyncResults = ReferencesSearch
-            .search(asyncFun, GlobalSearchScope.projectScope(project))
-            .filter { it.element.parent is KtCallExpression }.map {it.element}
-        
-        rbResults.forEach { 
-            
-            createSubtree(it, it.containingFile.virtualFile)
-            rbFiles.add(it.containingFile.virtualFile)
-        }
-        
-        launchResults.forEach {
-            createSubtree(it, it.containingFile.virtualFile)
-            rbFiles.add(it.containingFile.virtualFile)
-        }
-
-        asyncResults.forEach {
-            createSubtree(it, it.containingFile.virtualFile)
-            rbFiles.add(it.containingFile.virtualFile)
-        }
-        
-    }
-    
-
-    private fun findFunction(project: Project, fileName: String, fileFilter: PsiElementFilter, funDefFilter: PsiElementFilter): PsiElement {
-        val files = FilenameIndex.getVirtualFilesByName(fileName, GlobalSearchScope.everythingScope(project))
-        val psiFile = files
-            .map{PsiManager.getInstance(project).findFile(it)}
-            .filterNotNull()
-            .first { fileFilter.isAccepted(it) }
-
-        val funDef = MyPsiUtils.findAllChildren(psiFile) { funDefFilter.isAccepted(it) }.first()
-
-
-        return funDef
-    }
-
     // Full project analysis for nested run blocking calls 
     private fun fullAnalysis() {
         // Clear rb graph
@@ -181,12 +104,12 @@ internal class DetectRunBlockingServiceImpl(override val project: Project) : Det
             println("Building graph: $index / ${relevantFiles.size}")
             // Search kotlin file for runBlocking calls, and generate tree
             findRunBlockings(file).forEach { rb ->
-                createSubtree(rb, file)
+                createSubtree(rb)
                 rbFiles.add(file)
             }
-//             Search for async, and launch builders in case globalscope or android scopes are used
+            // Search for async, and launch builders in case globalscope or android scopes are used
             findNonBlockingBuilders(file).forEach { builder -> 
-                createSubtree(builder, file)
+                createSubtree(builder)
             }
             // suspend fun for completeness
             findSuspendFuns(file).forEach { susFun ->
@@ -196,10 +119,10 @@ internal class DetectRunBlockingServiceImpl(override val project: Project) : Det
         }
     }
 
-    private fun createSubtree(builder: PsiElement, file: VirtualFile) {
+    private fun createSubtree(builder: PsiElement) {
         //Add runBlocking root to graph
         val runBlockingNode = rbGraph.addBuilder(builder)
-//        println("Adding runBlocking ${runBlockingNode.id}")
+        // println("Adding runBlocking ${runBlockingNode.id}")
         exploreFunDeclaration(builder, runBlockingNode)
     }
 
@@ -209,7 +132,6 @@ internal class DetectRunBlockingServiceImpl(override val project: Project) : Det
     }
 
     private fun exploreFunDeclaration(currentPsiEl: PsiElement, currentNode: FunctionNode) {
-//        println("Exploring function ${currentNode.id}")
         // If explored stop
         if (currentNode.visited) return
         currentNode.visited = true

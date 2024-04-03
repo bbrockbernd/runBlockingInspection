@@ -6,6 +6,9 @@ import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtNameReferenceExpression
 import org.jetbrains.kotlin.psi.KtNamedFunction
 
+/**
+ * Custom PsiElementFilters used for runBlocking inspections
+ */
 class ElementFilters {
     companion object {
         val runBlockingBuilderInvocation = PsiElementFilter { el ->

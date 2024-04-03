@@ -6,7 +6,6 @@ import com.intellij.psi.PsiRecursiveElementVisitor
 
 class MyPsiUtils {
     companion object {
-        
         fun findAllChildren(startElement: PsiElement, condition: (PsiElement) -> Boolean, fenceCondition: (PsiElement) -> Boolean): List<PsiElement> {
             val foundChildren = mutableListOf<PsiElement>()
             startElement.accept(object: PsiRecursiveElementVisitor() {
@@ -33,6 +32,5 @@ class MyPsiUtils {
             val virtualFile = containingFile.virtualFile ?: return null
             return if (element is PsiFileSystemItem) virtualFile.url else virtualFile.url + "#" + element.textOffset
         }
-        
     }
 }

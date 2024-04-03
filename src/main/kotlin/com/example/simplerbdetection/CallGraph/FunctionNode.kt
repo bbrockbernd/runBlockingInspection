@@ -4,6 +4,14 @@ import com.example.simplerbdetection.ElementFilters
 import com.example.simplerbdetection.MyPsiUtils
 import org.jetbrains.kotlin.psi.KtNamedFunction
 
+/**
+ * Represents a node in the function hierarchy.
+ *
+ * @property id The unique identifier of the function.
+ * @property declarationSite The declaration site of the function.
+ * @property fqName The fully qualified name of the function.
+ * @property isSuspend Indicates whether the function is a suspend function or not.
+ */
 class FunctionNode(
     val id: String, 
     val declarationSite: String,
@@ -25,9 +33,6 @@ class FunctionNode(
     var visited = false
     var isBuilder = false
     
-    fun getChildren(): Set<FunctionNode> {
-        return childrenUrlMap.keys
-    }
     fun getCallSiteFor(node: FunctionNode): String {
         return childrenUrlMap[node]!!
     }

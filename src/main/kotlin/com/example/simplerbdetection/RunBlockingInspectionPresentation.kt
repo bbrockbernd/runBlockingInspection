@@ -28,7 +28,7 @@ class RunBlockingInspectionPresentation(
 
     override fun getCustomPreviewPanel(descriptor: CommonProblemDescriptor, parent: Disposable): JComponent? {
         if (descriptor is ProblemDescriptor) {
-            val stackTrace = descriptor.psiElement.project.service<DetectRunBlockingService>().isInAsyncContext(descriptor.psiElement.parent)
+            val stackTrace = descriptor.psiElement.project.service<DetectRunBlockingService>().analyzeRunBlocking(descriptor.psiElement.parent)
             if (stackTrace != null) {
                 val htmlView = DescriptionEditorPane()
                 val css = (htmlView.editorKit as HTMLEditorKit).styleSheet
@@ -48,9 +48,9 @@ class RunBlockingInspectionPresentation(
                             vFile = VfsUtil.findFileByURL(url)
                         }
                         if (vFile != null) {
-                            val descriptor =
+                            val currentDescriptor =
                                 PsiNavigationSupport.getInstance().createNavigatable(project, vFile, offset)
-                            descriptor.navigate(true)
+                            currentDescriptor.navigate(true)
                         }
                     }
                 })
@@ -64,9 +64,9 @@ class RunBlockingInspectionPresentation(
 
     private fun getDescription(callStack: List<Pair<String, String>>): String {
         return buildString {
-            append("<div class=\"problem-description\"><h>RunBlocking in coroutine</h><p>")
-            callStack.forEach { append("<a HREF=${it.second}>${it.first}</a><br>") }
-            append("</p></div>")
+            append("<div class=\"problem-description\"><h>RunBlocking in coroutine</h><p><ul>")
+            callStack.forEach { append("<li><a HREF=${it.second}>${it.first}</a></li>") }
+            append("</ul></p></div>")
         }
     }
 

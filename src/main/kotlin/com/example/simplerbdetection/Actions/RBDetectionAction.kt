@@ -5,6 +5,9 @@ import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.components.service
 
+/**
+ * Manual rb trigger for testing purposes
+ */
 class RBDetectionAction : AnAction() {
     
     override fun actionPerformed(e: AnActionEvent) {   
