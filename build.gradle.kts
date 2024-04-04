@@ -14,10 +14,10 @@ repositories {
 // Configure Gradle IntelliJ Plugin
 // Read more: https://plugins.jetbrains.com/docs/intellij/tools-gradle-intellij-plugin.html
 intellij {
-    version.set("2023.3.4")
+    version.set("2023.3.6")
     type.set("IC") // Target IDE Platform
 
-    plugins.set(listOf("Kotlin"))
+    plugins.set(listOf("Kotlin", "IdeaVIM:2.10.2", "org.jetbrains.android:233.15026.9"))
 }
 
 
