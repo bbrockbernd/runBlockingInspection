@@ -26,7 +26,29 @@ deadlock1_delete_and_quit
 tachiyomi is very difficult to get to work, due to online dependencies being removed
 
 ktor main
-11 total
+11 total (All tests however)
 1 FP
 10 TP
 
+owncloud-android
+2 / 2
+
+duckduckgo-android
+2 / 2
+
+thunderbird-android 
+0
+
+home-assistant-android
+7 / 7
+
+adam 
+0
+
+plaid only tests
+mapbox-navigation too much hassle
+
+arcs -> intellij plugin
+
+ethereum thingy
+lots of hits, but most for tests. Will redo after ignore test option is available.
