@@ -1,10 +1,12 @@
 package com.example.simplerbdetection
 
+import com.intellij.psi.impl.source.tree.LeafPsiElement
 import com.intellij.psi.util.PsiElementFilter
 import org.jetbrains.kotlin.psi.KtCallExpression
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtNameReferenceExpression
 import org.jetbrains.kotlin.psi.KtNamedFunction
+import org.jetbrains.kotlin.psi.psiUtil.hasSuspendModifier
 
 /**
  * Custom PsiElementFilters used for runBlocking inspections
@@ -30,7 +32,7 @@ class ElementFilters {
         
         val suspendFun = PsiElementFilter { el -> 
             if (el is KtNamedFunction) {
-                return@PsiElementFilter el.modifierList?.text?.contains("suspend") ?: false
+                return@PsiElementFilter el.modifierList?.hasSuspendModifier() ?: false
             }
             return@PsiElementFilter false
         }
