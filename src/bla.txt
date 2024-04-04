@@ -52,3 +52,15 @@ arcs -> intellij plugin
 
 ethereum thingy
 lots of hits, but most for tests. Will redo after ignore test option is available.
+
+sketch
+total 8
+7 test
+1 real 
+
+stripe
+total 6
+6 real
+
+proton-mail
+0
