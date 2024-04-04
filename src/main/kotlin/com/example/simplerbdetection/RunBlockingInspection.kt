@@ -8,6 +8,7 @@ import com.intellij.openapi.components.service
 import com.intellij.psi.PsiElement
 import org.jetbrains.kotlin.psi.KtCallExpression
 
+
 class RunBlockingInspection() : GlobalInspectionTool() {
 
     override fun runInspection(
@@ -16,7 +17,7 @@ class RunBlockingInspection() : GlobalInspectionTool() {
         globalContext: GlobalInspectionContext,
         problemDescriptionsProcessor: ProblemDescriptionsProcessor
     ) {
-        manager.project.service<DetectRunBlockingService>().analyseProject()
+        manager.project.service<DetectRunBlockingService>().analyseProject(scope)
         val badRunBlockings = manager.project.service<DetectRunBlockingService>().wholeProject()
         val rbFileMap = mutableMapOf<String, RefFileImpl>()
         badRunBlockings.forEach {
@@ -36,6 +37,17 @@ class RunBlockingInspection() : GlobalInspectionTool() {
             )
         }
     }
+    
+    var excludeTestClasses = false
+
+//    override fun getOptionsPane(): OptPane {
+//        return pane(
+//            checkbox(
+//                "excludeTestClasses",
+//                "Exclude test classes"
+//            )
+//        )
+//    }
 
     override fun isGraphNeeded(): Boolean = false
 }

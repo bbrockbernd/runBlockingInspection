@@ -4,6 +4,7 @@ import com.example.simplerbdetection.CallGraph.FunctionNode
 import com.example.simplerbdetection.CallGraph.RBGraph
 import com.example.simplerbdetection.ElementFilters
 import com.example.simplerbdetection.MyPsiUtils
+import com.intellij.analysis.AnalysisScope
 import com.intellij.analysis.problemsView.ProblemsProvider
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.ProjectFileIndex
@@ -21,6 +22,7 @@ internal class DetectRunBlockingServiceImpl(override val project: Project) : Det
     private val relevantFiles = mutableListOf<VirtualFile>()
     private val rbFiles = mutableSetOf<VirtualFile>()
     private val rbGraph = RBGraph()
+    private var excludeTests = false
 
     /**
      * Analyzes the given [element] to determine if it is running inside a coroutine and returns a stack trace
@@ -66,7 +68,9 @@ internal class DetectRunBlockingServiceImpl(override val project: Project) : Det
         return null
     }
 
-    override fun analyseProject() {
+    override fun analyseProject(scope: AnalysisScope?) {
+        // Get editable kotlin files
+        updateRelevantFiles(scope)
         fullAnalysis()
         wholeProject()
     }
@@ -98,8 +102,6 @@ internal class DetectRunBlockingServiceImpl(override val project: Project) : Det
         rbGraph.clear()
         rbFiles.clear()
 
-        // Get editable kotlin files
-        updateRelevantFiles()
         relevantFiles.forEachIndexed() { index, file ->
             println("Building graph: $index / ${relevantFiles.size}")
             // Search kotlin file for runBlocking calls, and generate tree
@@ -171,10 +173,11 @@ internal class DetectRunBlockingServiceImpl(override val project: Project) : Det
         return MyPsiUtils.findAllChildren(psiFile) { ElementFilters.suspendFun.isAccepted(it) }
     }
 
-    private fun updateRelevantFiles(): MutableList<VirtualFile> {
+    private fun updateRelevantFiles(scope: AnalysisScope?): MutableList<VirtualFile> {
         relevantFiles.clear()
+        
         ProjectFileIndex.getInstance(project).iterateContent {
-            if (it.fileType is KotlinFileType) {
+            if (it.fileType is KotlinFileType && scope?.contains(it) != false) {
                 relevantFiles.add(it)
             }
             true
