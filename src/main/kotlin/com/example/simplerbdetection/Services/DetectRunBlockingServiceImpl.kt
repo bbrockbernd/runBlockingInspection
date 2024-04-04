@@ -22,7 +22,6 @@ internal class DetectRunBlockingServiceImpl(override val project: Project) : Det
     private val relevantFiles = mutableListOf<VirtualFile>()
     private val rbFiles = mutableSetOf<VirtualFile>()
     private val rbGraph = RBGraph()
-    private var excludeTests = false
 
     /**
      * Analyzes the given [element] to determine if it is running inside a coroutine and returns a stack trace

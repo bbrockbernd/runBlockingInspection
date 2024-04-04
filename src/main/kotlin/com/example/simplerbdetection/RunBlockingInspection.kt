@@ -38,7 +38,7 @@ class RunBlockingInspection() : GlobalInspectionTool() {
         }
     }
     
-    var excludeTestClasses = false
+//    var excludeTestClasses = false
 
 //    override fun getOptionsPane(): OptPane {
 //        return pane(
