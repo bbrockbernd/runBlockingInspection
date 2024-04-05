@@ -6,6 +6,9 @@ import com.intellij.codeInspection.*
 import com.intellij.codeInspection.reference.RefFileImpl
 import com.intellij.openapi.components.service
 import com.intellij.psi.PsiElement
+import com.intellij.util.indexing.FileBasedIndex
+import com.intellij.util.indexing.ID
+import org.jetbrains.kotlin.idea.base.indices.names.KotlinTopLevelCallableByPackageShortNameIndex
 import org.jetbrains.kotlin.psi.KtCallExpression
 
 
@@ -17,6 +20,10 @@ class RunBlockingInspection() : GlobalInspectionTool() {
         globalContext: GlobalInspectionContext,
         problemDescriptionsProcessor: ProblemDescriptionsProcessor
     ) {
+        
+        val joe = FileBasedIndex.getInstance().getAllKeys(KotlinTopLevelCallableByPackageShortNameIndex.NAME, manager.project)
+        
+        
         manager.project.service<DetectRunBlockingService>().analyseProject(scope)
         val badRunBlockings = manager.project.service<DetectRunBlockingService>().wholeProject()
         val rbFileMap = mutableMapOf<String, RefFileImpl>()

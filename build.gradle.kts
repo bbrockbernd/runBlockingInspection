@@ -20,6 +20,12 @@ intellij {
     plugins.set(listOf("Kotlin", "IdeaVIM:2.10.2", "org.jetbrains.android:233.15026.9"))
 }
 
+dependencies {
+    
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.1")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.8.1")
+}
+
 
 tasks {
     // Set the JVM compatibility versions
@@ -47,5 +53,9 @@ tasks {
 
     publishPlugin {
         token.set(System.getenv("PUBLISH_TOKEN"))
+    }
+    
+    test {
+        useJUnitPlatform() 
     }
 }
