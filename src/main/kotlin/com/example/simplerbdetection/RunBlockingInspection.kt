@@ -20,10 +20,6 @@ class RunBlockingInspection() : GlobalInspectionTool() {
         globalContext: GlobalInspectionContext,
         problemDescriptionsProcessor: ProblemDescriptionsProcessor
     ) {
-        
-        val joe = FileBasedIndex.getInstance().getAllKeys(KotlinTopLevelCallableByPackageShortNameIndex.NAME, manager.project)
-        
-        
         manager.project.service<DetectRunBlockingService>().analyseProject(scope)
         val badRunBlockings = manager.project.service<DetectRunBlockingService>().wholeProject()
         val rbFileMap = mutableMapOf<String, RefFileImpl>()
