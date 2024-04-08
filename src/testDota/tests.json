@@ -2,17 +2,67 @@
   "tests": [
     
     {
-      "name": "Directly nested runBlocking",
+      "name": "runBlocking direct child of async primitive",
       "inputFiles": ["DirectlyNested.kt"],
       "results": [{"trace":  [
         {
           "fqName": "kotlinx.coroutines.runBlocking", 
           "file":  "DirectlyNested.kt",
-          "offset":  64
+          "offset":  77
         }, {
           "fqName":  "--> runBlocking",
           "file":  "DirectlyNested.kt",
-          "offset": 86
+          "offset": 103
+        } 
+      ]}, {"trace":  [
+        {
+          "fqName": "DirectlyNested.fun2",
+          "file":  "DirectlyNested.kt",
+          "offset":  151
+        }, {
+          "fqName":  "--> runBlocking",
+          "file":  "DirectlyNested.kt",
+          "offset": 168
+        }
+      ]},{"trace":  [
+        {
+          "fqName": "kotlinx.coroutines.launch",
+          "file":  "DirectlyNested.kt",
+          "offset":  228
+        }, {
+          "fqName":  "--> runBlocking",
+          "file":  "DirectlyNested.kt",
+          "offset": 249
+        }
+      ]},{"trace":  [
+        {
+          "fqName": "DirectlyNested.fun4",
+          "file":  "DirectlyNested.kt",
+          "offset":  297
+        }, {
+          "fqName":  "--> runBlocking",
+          "file":  "DirectlyNested.kt",
+          "offset": 343
+        }
+      ]},{"trace":  [
+        {
+          "fqName": "kotlinx.coroutines.launch",
+          "file":  "DirectlyNested.kt",
+          "offset":  438
+        }, {
+          "fqName":  "--> runBlocking",
+          "file":  "DirectlyNested.kt",
+          "offset": 463
+        }
+      ]},{"trace":  [
+        {
+          "fqName": "kotlinx.coroutines.async",
+          "file":  "DirectlyNested.kt",
+          "offset":  547
+        }, {
+          "fqName":  "--> runBlocking",
+          "file":  "DirectlyNested.kt",
+          "offset": 567
         }
       ]}]
     }

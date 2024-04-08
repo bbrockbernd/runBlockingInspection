@@ -61,9 +61,9 @@ class SimpleRunBlockingTest: LightJavaCodeInsightFixtureTestCase() {
         Assertions.assertEquals(test.results.size, foundResults.size)
         test.results.forEach { expectation ->
             val expectedRBUrl = "temp:///src/${expectation.trace.last().file}#${expectation.trace.last().offset}"
-            val foundTrace = foundResults.first { it.stacTrace.last().second == expectedRBUrl }
-            Assertions.assertNotNull(foundTrace)
-            Assertions.assertArrayEquals(expectation.trace.map {"temp:///src/${it.file}#${it.offset}"}.toTypedArray(), foundTrace.stacTrace.map {it.second}.toTypedArray())
+            val foundTrace = foundResults.firstOrNull { it.stacTrace.last().second == expectedRBUrl }
+            Assertions.assertNotNull(foundTrace, "Following runBlocking not detected: $expectedRBUrl")
+            Assertions.assertArrayEquals(expectation.trace.map {"temp:///src/${it.file}#${it.offset}"}.toTypedArray(), foundTrace!!.stacTrace.map {it.second}.toTypedArray())
             Assertions.assertArrayEquals(expectation.trace.map {it.fqName}.toTypedArray(), foundTrace.stacTrace.map {it.first}.toTypedArray())
         }
     }
