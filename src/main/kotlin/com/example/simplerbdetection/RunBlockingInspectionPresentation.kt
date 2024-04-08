@@ -5,6 +5,7 @@ import com.intellij.codeInspection.CommonProblemDescriptor
 import com.intellij.codeInspection.ProblemDescriptor
 import com.intellij.codeInspection.ex.GlobalInspectionContextImpl
 import com.intellij.codeInspection.ex.InspectionToolWrapper
+import com.intellij.codeInspection.reference.RefEntity
 import com.intellij.codeInspection.ui.DefaultInspectionToolPresentation
 import com.intellij.ide.util.PsiNavigationSupport
 import com.intellij.openapi.Disposable
@@ -16,7 +17,10 @@ import com.intellij.profile.codeInspection.ui.readHTML
 import com.intellij.ui.HyperlinkAdapter
 import com.intellij.ui.scale.JBUIScale.scale
 import com.intellij.util.ui.StartupUiUtil.labelFont
+import org.jdom.Element
 import org.jetbrains.annotations.NonNls
+import java.util.function.Consumer
+import java.util.function.Predicate
 import javax.swing.JComponent
 import javax.swing.event.HyperlinkEvent
 import javax.swing.text.html.HTMLEditorKit
@@ -59,6 +63,26 @@ class RunBlockingInspectionPresentation(
             }
         }
         return null
+    }
+
+    override fun exportResults(
+        resultConsumer: Consumer<in Element>,
+        excludedEntities: Predicate<in RefEntity>,
+        excludedDescriptors: Predicate<in CommonProblemDescriptor>
+    ) {
+        val refEntities = problemElements.keys()
+        refEntities.forEach {
+            exportResults(resultConsumer, it, excludedDescriptors)
+        }
+    }
+
+    override fun exportResults(
+        resultConsumer: Consumer<in Element>,
+        refEntity: RefEntity,
+        isDescriptorExcluded: Predicate<in CommonProblemDescriptor>
+    ) {
+        val problemDescriptor = problemElements[refEntity]
+        super.exportResults(problemDescriptor, refEntity, resultConsumer, isDescriptorExcluded)
     }
 
 

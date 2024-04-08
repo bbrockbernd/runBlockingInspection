@@ -1,0 +1,20 @@
+{
+  "tests": [
+    
+    {
+      "name": "Directly nested runBlocking",
+      "inputFiles": ["DirectlyNested.kt"],
+      "results": [{"trace":  [
+        {
+          "fqName": "kotlinx.coroutines.runBlocking", 
+          "file":  "DirectlyNested.kt",
+          "offset":  64
+        }, {
+          "fqName":  "--> runBlocking",
+          "file":  "DirectlyNested.kt",
+          "offset": 86
+        }
+      ]}]
+    }
+  ]
+}

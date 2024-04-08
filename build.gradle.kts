@@ -2,6 +2,8 @@ plugins {
     id("java")
     id("org.jetbrains.kotlin.jvm") version "1.9.21"
     id("org.jetbrains.intellij") version "1.17.2"
+    kotlin("plugin.serialization") version "1.4.21"
+
 }
 
 group = "com.example"
