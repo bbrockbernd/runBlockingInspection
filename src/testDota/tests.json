@@ -1,8 +1,7 @@
 {
   "tests": [
     
-    {
-      "name": "runBlocking direct child of async primitive",
+    {"name": "runBlocking direct child of async primitive",
       "inputFiles": ["DirectlyNested.kt"],
       "results": [{"trace":  [
         {
@@ -63,6 +62,54 @@
           "fqName":  "--> runBlocking",
           "file":  "DirectlyNested.kt",
           "offset": 567
+        }
+      ]}]
+    },
+    
+    
+    {"name": "runBlocking trough function calls in same file",
+      "inputFiles": ["SameFileThroughFunctions.kt"],
+      "results": [{"trace":  [
+        {
+          "fqName": "SameFileThroughFunctions.fun1",
+          "file":  "SameFileThroughFunctions.kt",
+          "offset":  79
+        }, {
+          "fqName": "SameFileThroughFunctions.fun2",
+          "file":  "SameFileThroughFunctions.kt",
+          "offset":  96
+        }, {
+          "fqName": "SameFileThroughFunctions.fun3",
+          "file":  "SameFileThroughFunctions.kt",
+          "offset":  135
+        }, {
+          "fqName":  "--> runBlocking",
+          "file":  "SameFileThroughFunctions.kt",
+          "offset": 174
+        }
+      ]}]
+    },
+    
+    
+    {"name": "Detection over two files",
+      "inputFiles": ["File1ThroughFunctions.kt", "File2ThroughFunctions.kt"],
+      "results": [{"trace":  [
+        {
+          "fqName": "kotlinx.coroutines.runBlocking",
+          "file":  "File2ThroughFunctions.kt",
+          "offset":  84
+        }, {
+          "fqName": "File2ThroughFunctions.fun2",
+          "file":  "File2ThroughFunctions.kt",
+          "offset":  110
+        }, {
+          "fqName": "File1ThroughFunctions.fun1",
+          "file":  "File2ThroughFunctions.kt",
+          "offset":  183
+        }, {
+          "fqName":  "--> runBlocking",
+          "file":  "File1ThroughFunctions.kt",
+          "offset": 84
         }
       ]}]
     }
