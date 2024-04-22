@@ -3,16 +3,16 @@ package com.example.simplerbdetection
 import com.example.simplerbdetection.Services.DetectRunBlockingService
 import com.intellij.analysis.AnalysisScope
 import com.intellij.codeInspection.*
+import com.intellij.codeInspection.ex.JobDescriptor
 import com.intellij.codeInspection.reference.RefFileImpl
 import com.intellij.openapi.components.service
 import com.intellij.psi.PsiElement
-import com.intellij.util.indexing.FileBasedIndex
-import com.intellij.util.indexing.ID
-import org.jetbrains.kotlin.idea.base.indices.names.KotlinTopLevelCallableByPackageShortNameIndex
 import org.jetbrains.kotlin.psi.KtCallExpression
 
 
 class RunBlockingInspection() : GlobalInspectionTool() {
+    
+    private val jobDescriptor = JobDescriptor("Analyzing runBlocking")
 
     override fun runInspection(
         scope: AnalysisScope,
@@ -20,7 +20,10 @@ class RunBlockingInspection() : GlobalInspectionTool() {
         globalContext: GlobalInspectionContext,
         problemDescriptionsProcessor: ProblemDescriptionsProcessor
     ) {
-        manager.project.service<DetectRunBlockingService>().analyseProject(scope)
+        
+        manager.project.service<DetectRunBlockingService>().analyseProject(scope, {jobDescriptor.totalAmount = it}, {
+            globalContext.incrementJobDoneAmount(jobDescriptor, "Kt file ${jobDescriptor.doneAmount}/${jobDescriptor.totalAmount}")
+        })
         val badRunBlockings = manager.project.service<DetectRunBlockingService>().wholeProject()
         val rbFileMap = mutableMapOf<String, RefFileImpl>()
         badRunBlockings.forEach {
@@ -51,6 +54,10 @@ class RunBlockingInspection() : GlobalInspectionTool() {
 //            )
 //        )
 //    }
+
+    override fun getAdditionalJobs(context: GlobalInspectionContext): Array<JobDescriptor>? {
+        return arrayOf(jobDescriptor)
+    }
 
     override fun isGraphNeeded(): Boolean = false
 }

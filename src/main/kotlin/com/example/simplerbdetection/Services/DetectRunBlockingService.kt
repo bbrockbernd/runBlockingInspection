@@ -9,6 +9,6 @@ interface DetectRunBlockingService {
     fun wholeProject(): List<RunBlockingProblem>
     data class RunBlockingProblem(val element: PsiElement, val stacTrace: List<Pair<String, String>>)
 
-    fun analyseProject(scope: AnalysisScope? = null)
+    fun analyseProject(scope: AnalysisScope? = null, totalFilesTodo: ((Int) -> Unit) = {}, incrementFilesDone: (() -> Unit) = {})
 }
 

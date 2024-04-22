@@ -51,7 +51,7 @@ mapbox-navigation too much hassle
 arcs -> intellij plugin
 
 ethereum thingy
-lots of hits, but most for tests. Will redo after ignore test option is available.
+0
 
 sketch
 total 8
@@ -64,3 +64,9 @@ total 6
 
 proton-mail
 0
+
+WordPress-android
+0
+
+element-android
+2/2 (of which one is test but still applicable I would say)

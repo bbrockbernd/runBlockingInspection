@@ -67,10 +67,10 @@ internal class DetectRunBlockingServiceImpl(override val project: Project) : Det
         return null
     }
 
-    override fun analyseProject(scope: AnalysisScope?) {
+    override fun analyseProject(scope: AnalysisScope?, totalFilesTodo: ((Int) -> Unit), incrementFilesDone: (() -> Unit)) {
         // Get editable kotlin files
         updateRelevantFiles(scope)
-        fullAnalysis()
+        fullAnalysis(totalFilesTodo, incrementFilesDone)
         wholeProject()
     }
 
@@ -96,11 +96,12 @@ internal class DetectRunBlockingServiceImpl(override val project: Project) : Det
     }
     
     // Full project analysis for nested run blocking calls 
-    private fun fullAnalysis() {
+    private fun fullAnalysis(totalFilesTodo: (Int) -> Unit, incrementFilesDone: (() -> Unit)) {
         // Clear rb graph
         rbGraph.clear()
         rbFiles.clear()
 
+        totalFilesTodo(relevantFiles.size)
         relevantFiles.forEachIndexed() { index, file ->
             println("Building graph: $index / ${relevantFiles.size}")
             // Search kotlin file for runBlocking calls, and generate tree
@@ -117,6 +118,7 @@ internal class DetectRunBlockingServiceImpl(override val project: Project) : Det
                 if (susFun is KtNamedFunction) 
                     exploreFunDeclaration(susFun, rbGraph.getOrCreateFunction(susFun))
             }
+            incrementFilesDone()
         }
     }
 
