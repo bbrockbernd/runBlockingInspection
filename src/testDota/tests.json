@@ -121,7 +121,7 @@
           "fqName": "kotlinx.coroutines.runBlocking",
           "file":  "SingleSubA.kt"
         }, {
-          "fqName": "virtualFunctions.singelsubA.SubClass.bar",
+          "fqName": "virtualFunctions.singlesubA.SubClass.bar",
           "file":  "SingleSubA.kt"
         }, {
           "fqName":  "--> runBlocking",
@@ -144,6 +144,48 @@
           "file":  "SingleSubB.kt"
         }
       ]}]
+    },
+    
+    {"name": "Interface(Declared) -> Sub -> SubSub (runBlocking, Initialized)",
+      "inputFiles": ["SubSubOnlyFirst.kt"],
+      "results": [{"trace":  [
+        {
+          "fqName": "kotlinx.coroutines.runBlocking",
+          "file":  "SubSubOnlyFirst.kt"
+        }, {
+          "fqName": "virtualFunctions.subSubOnlyFirst.SubSubClass.bar",
+          "file":  "SubSubOnlyFirst.kt"
+        }, {
+          "fqName":  "--> runBlocking",
+          "file":  "SubSubOnlyFirst.kt"
+        }
+      ]}]
+    },
+
+    {"name": "Interface(Declared) -> SubRight || SubLeft (runBlocking, Initialized)",
+      "inputFiles": ["TwoSubOnlyLeft.kt"],
+      "results": [{"trace":  [
+        {
+          "fqName": "kotlinx.coroutines.runBlocking",
+          "file":  "TwoSubOnlyLeft.kt"
+        }, {
+          "fqName": "virtualFunctions.twoSubOnlyLeft.SubClassLeft.bar",
+          "file":  "TwoSubOnlyLeft.kt"
+        }, {
+          "fqName":  "--> runBlocking",
+          "file":  "TwoSubOnlyLeft.kt"
+        }
+      ]}]
+    },
+
+    {"name": "Interface(Declared) -> Sub (Initialized) -> SubSub (runBlocking)",
+      "inputFiles": ["SubSubOnlyFirstFP.kt"],
+      "results": []
+    },
+    
+    {"name": "Interface(Declared) -> SubRight(Initialized) || SubLeft (runBlocking)",
+      "inputFiles": ["TwoSubOnlyLeftFP.kt"],
+      "results": []
     }
   ]
 }

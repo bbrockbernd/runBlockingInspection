@@ -19,6 +19,7 @@ import org.jetbrains.kotlin.util.collectionUtils.concat
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.DynamicTest.dynamicTest
 import java.io.File
+import java.util.stream.Stream
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class SimpleRunBlockingTest: LightJavaCodeInsightFixtureTestCase() {
@@ -41,18 +42,27 @@ class SimpleRunBlockingTest: LightJavaCodeInsightFixtureTestCase() {
     }
     
     @TestFactory
+    fun runIndividualTest(): Collection<DynamicTest> {
+        val testIndex = 3
+        return listOf(runTest(myTests.tests[testIndex]))
+    }
+    
+    
+    @TestFactory
     fun runBlockingTests(): Collection<DynamicTest> {
-        return myTests.tests.map { test ->
-            dynamicTest(test.name) {
-                val psiFiles = test.inputFiles.map { inputFile -> psiFileMap[inputFile]!!.virtualFile}
-                val analysisScope = AnalysisScope(myFixture.project, psiFiles)
-                val toolWrapper = GlobalInspectionToolWrapper(RunBlockingInspection())
-                val context = createGlobalContextForTool(analysisScope, myFixture.project, listOf(toolWrapper))
-                runInEdtAndWait { InspectionTestUtil.runTool(toolWrapper, analysisScope, context) }
-                runInEdtAndWait { 
-                    val results = myFixture.project.service<DetectRunBlockingService>().wholeProject() 
-                    assertResults(results, test)
-                }
+        return myTests.tests.map(::runTest)
+    }
+    
+    fun runTest(test: Test): DynamicTest {
+        return dynamicTest(test.name) {
+            val psiFiles = test.inputFiles.map { inputFile -> psiFileMap[inputFile]!!.virtualFile}
+            val analysisScope = AnalysisScope(myFixture.project, psiFiles)
+            val toolWrapper = GlobalInspectionToolWrapper(RunBlockingInspection())
+            val context = createGlobalContextForTool(analysisScope, myFixture.project, listOf(toolWrapper))
+            runInEdtAndWait { 
+                InspectionTestUtil.runTool(toolWrapper, analysisScope, context)
+                val results = myFixture.project.service<DetectRunBlockingService>().wholeProject()
+                assertResults(results, test)
             }
         }
     }

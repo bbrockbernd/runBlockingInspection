@@ -11,10 +11,13 @@ import com.intellij.openapi.roots.ProjectFileIndex
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiManager
+import com.intellij.psi.search.PsiSearchHelper
 import com.intellij.psi.util.PsiTreeUtil
 import org.jetbrains.kotlin.idea.KotlinFileType
+import org.jetbrains.kotlin.idea.search.declarationsSearch.forEachOverridingElement
 import org.jetbrains.kotlin.psi.KtCallExpression
 import org.jetbrains.kotlin.psi.KtFile
+import org.jetbrains.kotlin.psi.KtNamedDeclaration
 import org.jetbrains.kotlin.psi.KtNamedFunction
 import org.jetbrains.kotlin.util.collectionUtils.concat
 
@@ -140,7 +143,10 @@ internal class DetectRunBlockingServiceImpl(override val project: Project) : Det
         currentNode.visited = true
         //Find all calls from this runBlocking context
         val methodCalls = MyPsiUtils.findAllChildren(currentPsiEl, { it is KtCallExpression }, 
-            { ElementFilters.launchBuilder.isAccepted(it) || ElementFilters.asyncBuilder.isAccepted(it) || ElementFilters.runBlockingBuilderInvocation.isAccepted(it) }).filterIsInstance<KtCallExpression>()
+            { ElementFilters.launchBuilder.isAccepted(it) 
+                    || ElementFilters.asyncBuilder.isAccepted(it) 
+                    || ElementFilters.runBlockingBuilderInvocation.isAccepted(it) 
+            }).filterIsInstance<KtCallExpression>()
 
         for (call in methodCalls) {
             // Find method decl for call
@@ -151,10 +157,17 @@ internal class DetectRunBlockingServiceImpl(override val project: Project) : Det
                 val funFile = getFileForElement(psiFn)
                 if (!relevantFiles.contains(funFile)) return
 
+                val overrides = mutableListOf<KtNamedFunction>(psiFn)
+                psiFn.forEachOverridingElement { _, overrideFn ->
+                    if (relevantFiles.contains(getFileForElement(overrideFn)) && overrideFn is KtNamedFunction) overrides.add(overrideFn)
+                    true
+                }
                 // Get or create function node and explore
-                val functionNode = rbGraph.getOrCreateFunction(psiFn)
-                FunctionNode.connect(currentNode, functionNode, MyPsiUtils.getUrl(call)!!)
-                exploreFunDeclaration(psiFn, functionNode)
+                overrides.forEach { fn ->
+                    val functionNode = rbGraph.getOrCreateFunction(fn)
+                    FunctionNode.connect(currentNode, functionNode, MyPsiUtils.getUrl(call)!!)
+                    exploreFunDeclaration(fn, functionNode)
+                }
             }
         }
     }
