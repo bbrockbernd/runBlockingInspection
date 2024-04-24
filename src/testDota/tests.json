@@ -112,6 +112,38 @@
           "offset": 84
         }
       ]}]
+    },
+
+    {"name": "Single sub method runBlocking, call to virtual function",
+      "inputFiles": ["SingleSubA.kt"],
+      "results": [{"trace":  [
+        {
+          "fqName": "kotlinx.coroutines.runBlocking",
+          "file":  "SingleSubA.kt"
+        }, {
+          "fqName": "virtualFunctions.singelsubA.SubClass.bar",
+          "file":  "SingleSubA.kt"
+        }, {
+          "fqName":  "--> runBlocking",
+          "file":  "SingleSubA.kt"
+        }
+      ]}]
+    },
+
+    {"name": "Single sub method runBlocking, call to implemented function",
+      "inputFiles": ["SingleSubB.kt"],
+      "results": [{"trace":  [
+        {
+          "fqName": "kotlinx.coroutines.runBlocking",
+          "file":  "SingleSubB.kt"
+        }, {
+          "fqName": "virtualFunctions.singlesubB.SubClass.bar",
+          "file":  "SingleSubB.kt"
+        }, {
+          "fqName":  "--> runBlocking",
+          "file":  "SingleSubB.kt"
+        }
+      ]}]
     }
   ]
 }

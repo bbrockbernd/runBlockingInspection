@@ -58,12 +58,28 @@ class SimpleRunBlockingTest: LightJavaCodeInsightFixtureTestCase() {
     }
     
     private fun assertResults(foundResults: Collection<DetectRunBlockingService.RunBlockingProblem>, test: Test) {
+        // Assert equal amount of results
         Assertions.assertEquals(test.results.size, foundResults.size)
+        // Verify each result
         test.results.forEach { expectation ->
+            val checkOffsets = expectation.trace.last().offset != -1
+            //Find corresponding runBlocking, with or without offset
             val expectedRBUrl = "temp:///src/${expectation.trace.last().file}#${expectation.trace.last().offset}"
-            val foundTrace = foundResults.firstOrNull { it.stacTrace.last().second == expectedRBUrl }
+            val foundTrace = foundResults.firstOrNull { 
+                if (checkOffsets) {
+                    it.stacTrace.last().second == expectedRBUrl
+                } else {
+                    it.stacTrace.last().second.split("#")[0] == expectedRBUrl.split("#")[0]
+                }
+            }
+            
+            //Verify runBlocking found
             Assertions.assertNotNull(foundTrace, "Following runBlocking not detected: $expectedRBUrl")
-            Assertions.assertArrayEquals(expectation.trace.map {"temp:///src/${it.file}#${it.offset}"}.toTypedArray(), foundTrace!!.stacTrace.map {it.second}.toTypedArray())
+            //Verify files
+            Assertions.assertArrayEquals(expectation.trace.map {"temp:///src/${it.file}"}.toTypedArray(), foundTrace!!.stacTrace.map {it.second.split("#")[0]}.toTypedArray())
+            //Verify offsets
+            if (checkOffsets) Assertions.assertArrayEquals(expectation.trace.map {it.offset.toString()}.toTypedArray(), foundTrace!!.stacTrace.map {it.second.split("#")[1]}.toTypedArray())
+            //Verify fqNames
             Assertions.assertArrayEquals(expectation.trace.map {it.fqName}.toTypedArray(), foundTrace.stacTrace.map {it.first}.toTypedArray())
         }
     }
@@ -81,7 +97,7 @@ class SimpleRunBlockingTest: LightJavaCodeInsightFixtureTestCase() {
     }
 
     @Serializable
-    data class Trace(val fqName: String, val file: String, val offset: Int)
+    data class Trace(val fqName: String, val file: String, val offset: Int = -1)
 
     @Serializable
     data class Result(val trace: List<Trace>)
