@@ -165,7 +165,7 @@ internal class DetectRunBlockingServiceImpl(override val project: Project) : Det
                 // Find all function overrides
                 val overrides = mutableListOf<KtNamedFunction>(psiFn)
                 psiFn.forEachOverridingElement { _, overrideFn ->
-                    if (relevantFiles.contains(getFileForElement(overrideFn)) && overrideFn is KtNamedFunction) overrides.add(overrideFn)
+                    if (overrideFn is KtNamedFunction && relevantFiles.contains(getFileForElement(overrideFn))) overrides.add(overrideFn)
                     true
                 }
                 // Get or create function node and explore
