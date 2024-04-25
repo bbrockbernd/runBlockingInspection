@@ -11,13 +11,11 @@ import com.intellij.openapi.roots.ProjectFileIndex
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiManager
-import com.intellij.psi.search.PsiSearchHelper
 import com.intellij.psi.util.PsiTreeUtil
 import org.jetbrains.kotlin.idea.KotlinFileType
 import org.jetbrains.kotlin.idea.search.declarationsSearch.forEachOverridingElement
 import org.jetbrains.kotlin.psi.KtCallExpression
 import org.jetbrains.kotlin.psi.KtFile
-import org.jetbrains.kotlin.psi.KtNamedDeclaration
 import org.jetbrains.kotlin.psi.KtNamedFunction
 import org.jetbrains.kotlin.util.collectionUtils.concat
 
@@ -51,12 +49,19 @@ internal class DetectRunBlockingServiceImpl(override val project: Project) : Det
                 val funNode = rbGraph.getFunction(FunctionNode.generateId(psiFunOrBuilder))
                 if (funNode.asyncContext) {
                     // Find the shortest path from async primitive to this runBlocking
-                    val nodeTrace = rbGraph.findBuilderBFS(funNode)
-                    val stackTrace = mutableListOf<Pair<String, String>>(Pair(nodeTrace[0].fqName, nodeTrace[0].declarationSite))
-                    for (i in 1..<nodeTrace.size) {
-                        stackTrace.add(Pair(nodeTrace[i].fqName, nodeTrace[i-1].getCallSiteFor(nodeTrace[i])))
+                    val callEdgeTrace = rbGraph.findBuilderBFS(funNode)
+                    
+                    
+                    val stackTrace = 
+                        if (callEdgeTrace.size != 0) mutableListOf<Pair<String, String>>(Pair(callEdgeTrace[0].parent.fqName, callEdgeTrace[0].parent.declarationSite)) 
+                        else mutableListOf<Pair<String, String>>(Pair(funNode.fqName, funNode.declarationSite))
+                    
+                    for (i in 0..<callEdgeTrace.size) {
+                        stackTrace.add(Pair(callEdgeTrace[i].child.fqName, callEdgeTrace[i].callSite))
                     }
                     stackTrace.add(Pair("--> runBlocking", MyPsiUtils.getUrl(element)?: ""))
+                    
+                    
                     return stackTrace
                 }  
                 return null
@@ -157,6 +162,7 @@ internal class DetectRunBlockingServiceImpl(override val project: Project) : Det
                 val funFile = getFileForElement(psiFn)
                 if (!relevantFiles.contains(funFile)) return
 
+                // Find all function overrides
                 val overrides = mutableListOf<KtNamedFunction>(psiFn)
                 psiFn.forEachOverridingElement { _, overrideFn ->
                     if (relevantFiles.contains(getFileForElement(overrideFn)) && overrideFn is KtNamedFunction) overrides.add(overrideFn)

@@ -49,9 +49,9 @@ class RBGraph {
      * @param start The start node for the breadth-first search.
      * @return A list of nodes representing the path from the start node to the builder node.
      */
-    fun findBuilderBFS(start: FunctionNode): List<FunctionNode> {
-        // Map to backtrack traversed path
-        val cameFrom: MutableMap<FunctionNode, FunctionNode> = mutableMapOf()
+    fun findBuilderBFS(start: FunctionNode): List<CallEdge> {
+        // Map to backtrack traversed path map<Parent, ChildConnection>
+        val cameFrom: MutableMap<FunctionNode, CallEdge> = mutableMapOf()
         // Set all visited to false
         functionMap.values.forEach { it.visited = false }
         
@@ -66,17 +66,21 @@ class RBGraph {
                 break
             }
             currentNode.visited = true
-            val unexploredParents = currentNode.parents.filter { !it.visited }
-            queue.addAll(unexploredParents)
-            unexploredParents.forEach { cameFrom[it] = currentNode }
+            currentNode.parentEdges
+                .filter { !it.parent.visited }
+                .map { it }
+                .forEach { 
+                    queue.add(it.parent)
+                    cameFrom[it.parent] = it
+                }
         }
         
         // Generate trace trough cameFrom backtrack map
-        var backWardsNode = builderNode
-        val traceAccumulator: MutableList<FunctionNode> = mutableListOf(backWardsNode)
-        while (backWardsNode != start) {
-            backWardsNode = cameFrom[backWardsNode]!!
-            traceAccumulator.add(backWardsNode)
+        var backTrackEdge: CallEdge = cameFrom[builderNode] ?: return listOf()
+        val traceAccumulator: MutableList<CallEdge> = mutableListOf(backTrackEdge)
+        while (backTrackEdge.child != start) {
+            backTrackEdge = cameFrom[backTrackEdge.child]!!
+            traceAccumulator.add(backTrackEdge)
         }
         return traceAccumulator
     }

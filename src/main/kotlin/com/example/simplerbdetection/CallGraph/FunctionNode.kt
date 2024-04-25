@@ -26,28 +26,26 @@ class FunctionNode(
         ElementFilters.suspendFun.isAccepted(psiFun)
         )
     
-    private val childrenUrlMap = mutableMapOf<FunctionNode, String>()
+    private val childEdges = mutableSetOf<CallEdge>()
     
-    val parents = mutableSetOf<FunctionNode>()
+    val parentEdges = mutableSetOf<CallEdge>()
     var asyncContext = true
     var visited = false
     var isBuilder = false
     
-    fun getCallSiteFor(node: FunctionNode): String {
-        return childrenUrlMap[node]!!
-    }
-    fun addChild(child: FunctionNode, callSite: String) {
-        childrenUrlMap[child] = callSite
+    fun addChild(childConnection: CallEdge) {
+        childEdges.add(childConnection)
     }
     
-    fun addParent(parent: FunctionNode) {
-        parents.add(parent)
+    fun addParent(parentConnection: CallEdge) {
+        parentEdges.add(parentConnection)
     }
     
     companion object {
         fun connect(parent: FunctionNode, child: FunctionNode, callSite: String) {
-            parent.addChild(child, callSite)
-            child.addParent(parent)
+            val newCallEdge = CallEdge(parent, child, callSite)
+            parent.addChild(newCallEdge)
+            child.addParent(newCallEdge)
         }
         
         fun generateId(psiFun: KtNamedFunction): String {
