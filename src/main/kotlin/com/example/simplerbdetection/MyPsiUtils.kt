@@ -1,8 +1,13 @@
 package com.example.simplerbdetection
 
+import com.intellij.openapi.project.Project
+import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFileSystemItem
+import com.intellij.psi.PsiManager
 import com.intellij.psi.PsiRecursiveElementVisitor
+import com.intellij.psi.util.PsiTreeUtil
+import org.jetbrains.kotlin.psi.KtFile
 
 class MyPsiUtils {
     companion object {
@@ -31,6 +36,25 @@ class MyPsiUtils {
             if (containingFile == null) return null
             val virtualFile = containingFile.virtualFile ?: return null
             return if (element is PsiFileSystemItem) virtualFile.url else virtualFile.url + "#" + element.textOffset
+        }
+        fun findRunBlockings(file: VirtualFile, project: Project): List<PsiElement> {
+            val psiFile = PsiManager.getInstance(project).findFile(file) ?: return listOf()
+            return findAllChildren(psiFile) { ElementFilters.runBlockingBuilderInvocation.isAccepted(it) }
+        }
+
+        fun findNonBlockingBuilders(file: VirtualFile, project: Project): List<PsiElement> {
+            val psiFile = PsiManager.getInstance(project).findFile(file) ?: return listOf()
+            return findAllChildren(psiFile) { ElementFilters.launchBuilder.isAccepted(it) || ElementFilters.asyncBuilder.isAccepted(it) }
+        }
+
+        fun findSuspendFuns(file: VirtualFile, project: Project): List<PsiElement> {
+            val psiFile = PsiManager.getInstance(project).findFile(file) ?: return listOf()
+            return findAllChildren(psiFile) { ElementFilters.suspendFun.isAccepted(it) }
+        }
+        
+        fun getFileForElement(psiElement: PsiElement): VirtualFile {
+            val ktFile = PsiTreeUtil.findFirstParent(psiElement) { it is KtFile } as KtFile
+            return ktFile.virtualFile
         }
     }
 }

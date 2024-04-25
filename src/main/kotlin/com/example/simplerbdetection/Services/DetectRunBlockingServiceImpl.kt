@@ -22,7 +22,7 @@ import org.jetbrains.kotlin.util.collectionUtils.concat
 internal class DetectRunBlockingServiceImpl(override val project: Project) : DetectRunBlockingService, ProblemsProvider {
     private val relevantFiles = mutableListOf<VirtualFile>()
     private val rbFiles = mutableSetOf<VirtualFile>()
-    private val rbGraph = RBGraph()
+    private var rbGraph = RBGraph()
 
     /**
      * Analyzes the given [element] to determine if it is running inside a coroutine and returns a stack trace
@@ -89,7 +89,7 @@ internal class DetectRunBlockingServiceImpl(override val project: Project) : Det
     private fun checkRunBlockingsForFile(file: VirtualFile): List<DetectRunBlockingService.RunBlockingProblem> {
         if (!rbFiles.contains(file)) return emptyList()
         val rbs: MutableList<DetectRunBlockingService.RunBlockingProblem> = mutableListOf()
-        findRunBlockings(file).forEach { rb ->
+        MyPsiUtils.findRunBlockings(file, project).forEach { rb ->
             val stackTrace = analyzeRunBlocking(rb)
             if (stackTrace != null) {
                 val lineNr = MyPsiUtils.getLineNumber(rb)
@@ -106,91 +106,15 @@ internal class DetectRunBlockingServiceImpl(override val project: Project) : Det
     // Full project analysis for nested run blocking calls 
     private fun fullAnalysis(totalFilesTodo: (Int) -> Unit, incrementFilesDone: (() -> Unit)) {
         // Clear rb graph
-        rbGraph.clear()
         rbFiles.clear()
 
-        totalFilesTodo(relevantFiles.size)
-        relevantFiles.forEachIndexed() { index, file ->
-            println("Building graph: $index / ${relevantFiles.size}")
-            // Search kotlin file for runBlocking calls, and generate tree
-            findRunBlockings(file).forEach { rb ->
-                createSubtree(rb)
-                rbFiles.add(file)
-            }
-            // Search for async, and launch builders in case globalscope or android scopes are used
-            findNonBlockingBuilders(file).forEach { builder -> 
-                createSubtree(builder)
-            }
-            // suspend fun for completeness
-            findSuspendFuns(file).forEach { susFun ->
-                if (susFun is KtNamedFunction) 
-                    exploreFunDeclaration(susFun, rbGraph.getOrCreateFunction(susFun))
-            }
-            incrementFilesDone()
-        }
-    }
-
-    private fun createSubtree(builder: PsiElement) {
-        //Add runBlocking root to graph
-        val runBlockingNode = rbGraph.addBuilder(builder)
-        // println("Adding runBlocking ${runBlockingNode.id}")
-        exploreFunDeclaration(builder, runBlockingNode)
-    }
-
-    private fun getFileForElement(psiElement: PsiElement): VirtualFile {
-        val ktFile = PsiTreeUtil.findFirstParent(psiElement) { it is KtFile } as KtFile
-        return ktFile.virtualFile
-    }
-
-    private fun exploreFunDeclaration(currentPsiEl: PsiElement, currentNode: FunctionNode) {
-        // If explored stop
-        if (currentNode.visited) return
-        currentNode.visited = true
-        //Find all calls from this runBlocking context
-        val methodCalls = MyPsiUtils.findAllChildren(currentPsiEl, { it is KtCallExpression }, 
-            { ElementFilters.launchBuilder.isAccepted(it) 
-                    || ElementFilters.asyncBuilder.isAccepted(it) 
-                    || ElementFilters.runBlockingBuilderInvocation.isAccepted(it) 
-            }).filterIsInstance<KtCallExpression>()
-
-        for (call in methodCalls) {
-            // Find method decl for call
-            //TODO fix deprc call
-            val psiFn = call.calleeExpression?.reference?.resolve()
-            if (psiFn is KtNamedFunction) {
-                // if method in non-relevant file skip call.calleeExpression.reference.resolve()
-                val funFile = getFileForElement(psiFn)
-                if (!relevantFiles.contains(funFile)) return
-
-                // Find all function overrides
-                val overrides = mutableListOf<KtNamedFunction>(psiFn)
-                psiFn.forEachOverridingElement { _, overrideFn ->
-                    if (overrideFn is KtNamedFunction && relevantFiles.contains(getFileForElement(overrideFn))) overrides.add(overrideFn)
-                    true
-                }
-                // Get or create function node and explore
-                overrides.forEach { fn ->
-                    val functionNode = rbGraph.getOrCreateFunction(fn)
-                    FunctionNode.connect(currentNode, functionNode, MyPsiUtils.getUrl(call)!!)
-                    exploreFunDeclaration(fn, functionNode)
-                }
-            }
-        }
-    }
-
-    private fun findRunBlockings(file: VirtualFile): List<PsiElement> {
-        val psiFile = PsiManager.getInstance(project).findFile(file) ?: return listOf()
-        return MyPsiUtils.findAllChildren(psiFile) { ElementFilters.runBlockingBuilderInvocation.isAccepted(it) }
-    }
-    
-    private fun findNonBlockingBuilders(file: VirtualFile): List<PsiElement> {
-        val psiFile = PsiManager.getInstance(project).findFile(file) ?: return listOf()
-        return MyPsiUtils.findAllChildren(psiFile) { ElementFilters.launchBuilder.isAccepted(it) || ElementFilters.asyncBuilder.isAccepted(it) }
-    }
-    
-    private fun findSuspendFuns(file: VirtualFile): List<PsiElement> {
-        val psiFile = PsiManager.getInstance(project).findFile(file) ?: return listOf()
-        return MyPsiUtils.findAllChildren(psiFile) { ElementFilters.suspendFun.isAccepted(it) }
+        rbGraph = GraphBuilder(project)
+            .setRbFileFound { file -> rbFiles.add(file) }
+            .setIncrementFilesDoneFunction(incrementFilesDone)
+            .setTotalFilesTodo(totalFilesTodo)
+            .setRelevantFiles(relevantFiles)
+            .buildGraph()
+            .getGraph()
     }
 
     private fun updateRelevantFiles(scope: AnalysisScope?): MutableList<VirtualFile> {
@@ -204,5 +128,4 @@ internal class DetectRunBlockingServiceImpl(override val project: Project) : Det
         }
         return relevantFiles
     }
-
 }
