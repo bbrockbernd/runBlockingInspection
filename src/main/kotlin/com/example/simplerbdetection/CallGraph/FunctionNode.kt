@@ -3,6 +3,7 @@ package com.example.simplerbdetection.CallGraph
 import com.example.simplerbdetection.ElementFilters
 import com.example.simplerbdetection.MyPsiUtils
 import org.jetbrains.kotlin.psi.KtNamedFunction
+import org.jetbrains.kotlin.psi.psiUtil.containingClassOrObject
 
 /**
  * Represents a node in the function hierarchy.
@@ -16,6 +17,7 @@ class FunctionNode(
     val id: String, 
     val declarationSite: String,
     val fqName: String,
+    val classFqName: String,
     val isSuspend: Boolean
 ) {
     
@@ -23,10 +25,11 @@ class FunctionNode(
         generateId(psiFun), 
         MyPsiUtils.getUrl(psiFun) ?: "",
         psiFun.fqName.toString(),
+        psiFun.containingClassOrObject?.let{ it.fqName.toString()} ?: "",
         ElementFilters.suspendFun.isAccepted(psiFun)
         )
     
-    private val childEdges = mutableSetOf<CallEdge>()
+    val childEdges = mutableSetOf<CallEdge>()
     
     val parentEdges = mutableSetOf<CallEdge>()
     var asyncContext = true
@@ -42,12 +45,6 @@ class FunctionNode(
     }
     
     companion object {
-        fun connect(parent: FunctionNode, child: FunctionNode, callSite: String) {
-            val newCallEdge = CallEdge(parent, child, callSite)
-            parent.addChild(newCallEdge)
-            child.addParent(newCallEdge)
-        }
-        
         fun generateId(psiFun: KtNamedFunction): String {
             return "${psiFun.fqName}_${buildString{ psiFun.valueParameters.forEach { append(it.typeReference?.text) }}}"
         }

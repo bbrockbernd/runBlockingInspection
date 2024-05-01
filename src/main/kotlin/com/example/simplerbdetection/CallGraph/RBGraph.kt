@@ -4,15 +4,18 @@ import com.example.simplerbdetection.MyPsiUtils
 import com.intellij.psi.PsiElement
 import org.jetbrains.kotlin.psi.KtCallExpression
 import org.jetbrains.kotlin.psi.KtNamedFunction
+import org.jetbrains.kotlin.psi.psiUtil.containingClassOrObject
 import java.util.*
 
 class RBGraph {
     private var functionMap = mutableMapOf<String, FunctionNode>()
     private val fileMap = mutableMapOf<String, MutableSet<FunctionNode>>()
+    val edges = mutableSetOf<CallEdge>()
     
     fun clear() {
        functionMap.clear()
        fileMap.clear() 
+       edges.clear()
     }
     
     fun addBuilder(psiElement: PsiElement): FunctionNode {
@@ -20,9 +23,10 @@ class RBGraph {
         val filePath = psiElement.containingFile.virtualFile.path
         val ktFun: KtNamedFunction = psiElement.calleeExpression?.reference?.resolve() as KtNamedFunction
         val fqName: String = ktFun.fqName.toString()
+        val fqNameClass: String = ktFun.containingClassOrObject?.fqName.toString()
         val url = MyPsiUtils.getUrl(psiElement) ?: ""
         
-        val functionNode: FunctionNode = getOrAddBuilderToFM("${fqName}_${url}", url, fqName)
+        val functionNode: FunctionNode = getOrAddBuilderToFM("${fqName}_${url}", url, fqName, fqNameClass)
         addToFileMap(functionNode, filePath)
         functionNode.isBuilder = true
         return functionNode
@@ -43,6 +47,49 @@ class RBGraph {
         return functionMap[id]!!
     }
 
+    
+    /**
+     * Connects two function nodes in the function hierarchy. 
+     * Note that only parent.id and child.id are used to connect and not the actual objects.
+     *
+     * @param parent The parent function node.
+     * @param child The child function node.
+     * @param callSite The call site where the connection is made.
+     * @param strongConnection Indicates whether the connection is a strong connection or not.
+     */
+    fun connect(parent: FunctionNode, child: FunctionNode, callSite: String, strongConnection: Boolean = true) =
+        connect(parent.id, child.id, callSite, strongConnection)
+    
+    
+    /**
+     * Connects two function nodes in the function hierarchy.
+     *
+     * @param parentId The id of the parent function node.
+     * @param childId The id of the child function node.
+     * @param callSite The call site where the connection is made.
+     * @param strongConnection Indicates whether the connection is a strong connection or not.
+     */
+    fun connect(parentId: String, childId: String, callSite: String, strongConnection: Boolean = true) {
+        // Happy path
+        if (isConnected(parentId, childId)) return
+        
+        val parent = functionMap[parentId]!!
+        val child = functionMap[childId]!!
+        val newCallEdge = CallEdge(parent, child, callSite, strongConnection)
+        edges.add(newCallEdge)
+        parent.addChild(newCallEdge)
+        child.addParent(newCallEdge)
+    }
+    
+    fun isConnected(parent: FunctionNode, child: FunctionNode): Boolean = isConnected(parent.id, child.id)
+    
+    fun isConnected(parentId: String, childId: String): Boolean {
+        val parent = functionMap[parentId]
+        val child = functionMap[childId]
+        if (parent == null || child == null) return false
+        return parent.childEdges.any {it.child == child}
+    }
+    
     /**
      * Performs a breadth-first search starting from the given start node to find a builder or suspend node in the function graph.
      *
@@ -85,8 +132,8 @@ class RBGraph {
         return traceAccumulator
     }
     
-    private fun getOrAddBuilderToFM(id: String, declerationSite: String, fqName: String): FunctionNode {
-        return functionMap.getOrPut(id) { FunctionNode(id, declerationSite, fqName, false) }
+    private fun getOrAddBuilderToFM(id: String, declerationSite: String, fqName: String, fqClassName: String): FunctionNode {
+        return functionMap.getOrPut(id) { FunctionNode(id, declerationSite, fqName, fqClassName, false) }
     }
     
     private fun addToFileMap(fn: FunctionNode, filePath: String) {

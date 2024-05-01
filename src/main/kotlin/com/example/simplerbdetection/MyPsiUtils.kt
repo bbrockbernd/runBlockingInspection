@@ -7,7 +7,10 @@ import com.intellij.psi.PsiFileSystemItem
 import com.intellij.psi.PsiManager
 import com.intellij.psi.PsiRecursiveElementVisitor
 import com.intellij.psi.util.PsiTreeUtil
+import org.jetbrains.kotlin.psi.KtDotQualifiedExpression
+import org.jetbrains.kotlin.psi.KtElement
 import org.jetbrains.kotlin.psi.KtFile
+import org.jetbrains.kotlin.psi.KtNamedFunction
 
 class MyPsiUtils {
     companion object {
@@ -56,5 +59,14 @@ class MyPsiUtils {
             val ktFile = PsiTreeUtil.findFirstParent(psiElement) { it is KtFile } as KtFile
             return ktFile.virtualFile
         }
+        
+        fun findParentFunPsiElement(psiElement: PsiElement): KtNamedFunction? {
+            return PsiTreeUtil.findFirstParent(psiElement) { it is KtNamedFunction } as KtNamedFunction?
+        }
+
+        fun findParentDotQualified(psiElement: PsiElement): KtDotQualifiedExpression? {
+            return PsiTreeUtil.findFirstParent(psiElement) { it is KtDotQualifiedExpression } as KtDotQualifiedExpression?
+        }
+        
     }
 }
