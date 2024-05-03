@@ -1,6 +1,5 @@
 package com.example.simplerbdetection.Services
 
-import com.example.simplerbdetection.CallGraph.CallEdge
 import com.example.simplerbdetection.CallGraph.FunctionNode
 import com.example.simplerbdetection.CallGraph.RBGraph
 import com.example.simplerbdetection.ElementFilters
@@ -8,23 +7,18 @@ import com.example.simplerbdetection.MyPsiUtils
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiManager
-import org.jetbrains.kotlin.idea.references.mainReference
 import org.jetbrains.kotlin.idea.search.declarationsSearch.forEachOverridingElement
-import org.jetbrains.kotlin.nj2k.postProcessing.resolve
 import org.jetbrains.kotlin.psi.KtCallExpression
-import org.jetbrains.kotlin.psi.KtNameReferenceExpression
 import org.jetbrains.kotlin.psi.KtNamedFunction
-import java.util.*
 
-class GraphBuilder(private val project: Project) {
+open class GraphBuilder(protected val project: Project) {
     private var totalFilesTodo: (Int) -> Unit = {}
     private var incrementFilesDone: () -> Unit = {}
     private var rbFileFound: (VirtualFile) -> Unit = {}
     private var relevantFiles: List<VirtualFile> = emptyList()
-    private var urlToVirtualFileMap: MutableMap<String, VirtualFile> = mutableMapOf()
+    protected var urlToVirtualFileMap: MutableMap<String, VirtualFile> = mutableMapOf()
     
-    private val rbGraph = RBGraph()
+    protected val rbGraph = RBGraph()
 
     fun getGraph(): RBGraph = rbGraph
 
@@ -71,61 +65,6 @@ class GraphBuilder(private val project: Project) {
         return this
     }
     
-    fun pruneGraph(): GraphBuilder {
-        // while until graph is unchanged for now only one call
-        pruneEdgesRound()
-        pruneNodesRound()
-        
-        
-        return this
-    }
-    
-    private fun pruneEdgesRound() {
-        val weakEdges = rbGraph.edges.filter {!it.strongCall}
-        weakEdges.forEach {
-            if (!verifyEdge(it)) {
-                it.parent.childEdges.remove(it)
-                it.child.parentEdges.remove(it)
-                rbGraph.edges.remove(it)
-            }
-        }
-    }
-
-    // returns false if edge should be removed
-    private fun verifyEdge(edge: CallEdge): Boolean {
-//        val (url, offset) = edge.child.declarationSite.split("#")
-//        val vFile = urlToVirtualFileMap[url]!!
-//        val psiFile =  PsiManager.getInstance(project).findFile(vFile)
-//        val psiElement = psiFile?.findElementAt(offset.toInt())!!
-//        val psiFun = MyPsiUtils.findParentFunPsiElement(psiElement)!!
-        
-        val classId = edge.child.classFqName
-        val (url, offset) = edge.callSite.split("#")
-        val vFile = urlToVirtualFileMap[url]!!
-        val psiFile =  PsiManager.getInstance(project).findFile(vFile)
-        val psiElement = psiFile?.findElementAt(offset.toInt())!!
-
-
-        val queue: Queue<KtNameReferenceExpression> = LinkedList()
-        MyPsiUtils.findParentDotQualified(psiElement)?.let{ 
-            if (it.receiverExpression is KtNameReferenceExpression){
-                queue.add(it.receiverExpression as KtNameReferenceExpression)
-            }
-        }
-        
-        while (queue.isNotEmpty()) {
-            val currentExpr = queue.poll()
-            val origin = currentExpr.mainReference.resolve()
-            println()
-        }
-        
-        return false
-    }
-    
-    
-    private fun pruneNodesRound() {
-        
-    }
     
     private fun createSubtree(builder: PsiElement) {
         //Add runBlocking root to graph
