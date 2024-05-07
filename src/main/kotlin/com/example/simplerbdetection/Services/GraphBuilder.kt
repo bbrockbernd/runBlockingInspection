@@ -63,7 +63,7 @@ open class GraphBuilder(protected val project: Project) {
             }
             // suspend fun for completeness
             MyPsiUtils.findSuspendFuns(file, project).forEach { susFun ->
-                if (susFun is KtNamedFunction)
+                if (susFun is KtNamedFunction && susFun.fqName != null)
                     exploreFunDeclaration(susFun, rbGraph.getOrCreateFunction(susFun))
             }
             incrementFilesDone()
@@ -119,11 +119,13 @@ open class GraphBuilder(protected val project: Project) {
                 }
                 
                 toExplore.forEach { fn ->
-                    // Get or create function node and explore
-                    val functionNode = rbGraph.getOrCreateFunction(fn)
-                    // If no overrides -> Strong connection 
-                    rbGraph.connect(currentNode, functionNode, MyPsiUtils.getUrl(call)!!, toExplore.size == 1)
-                    exploreFunDeclaration(fn, functionNode)
+                    if (fn.fqName != null) {
+                        // Get or create function node and explore
+                        val functionNode = rbGraph.getOrCreateFunction(fn)
+                        // If no overrides -> Strong connection 
+                        rbGraph.connect(currentNode, functionNode, MyPsiUtils.getUrl(call)!!, toExplore.size == 1)
+                        exploreFunDeclaration(fn, functionNode)
+                    }
                 }
             }
         }

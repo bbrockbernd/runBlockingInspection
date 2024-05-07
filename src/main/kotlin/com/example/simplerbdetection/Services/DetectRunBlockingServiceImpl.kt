@@ -11,12 +11,9 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.ProjectFileIndex
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiManager
 import com.intellij.psi.util.PsiTreeUtil
 import org.jetbrains.kotlin.idea.KotlinFileType
-import org.jetbrains.kotlin.idea.search.declarationsSearch.forEachOverridingElement
 import org.jetbrains.kotlin.psi.KtCallExpression
-import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtNamedFunction
 import org.jetbrains.kotlin.util.collectionUtils.concat
 
@@ -28,7 +25,7 @@ internal class DetectRunBlockingServiceImpl(override val project: Project) : Det
     private val resultsMemo = mutableMapOf<String, List<Pair<String, String>>?>()
 
     override fun analyzeRunBlocking(element: PsiElement): List<Pair<String, String>>? =
-        MyPsiUtils.getUrl(element)?.let {resultsMemo.getOrPut(it) { analyzeRunBlockingImpl(element) }}
+        MyPsiUtils.getUrl(element)?.let {resultsMemo.computeIfAbsent(it) { analyzeRunBlockingImpl(element) }}
     
     
     /**
