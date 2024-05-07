@@ -4,10 +4,12 @@ import com.example.simplerbdetection.CallGraph.FunctionNode
 import com.example.simplerbdetection.CallGraph.RBGraph
 import com.example.simplerbdetection.ElementFilters
 import com.example.simplerbdetection.MyPsiUtils
+import com.example.simplerbdetection.RunBlockingInspection
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiElement
 import org.jetbrains.kotlin.idea.search.declarationsSearch.forEachOverridingElement
+import org.jetbrains.kotlin.idea.search.declarationsSearch.hasOverridingElement
 import org.jetbrains.kotlin.psi.KtCallExpression
 import org.jetbrains.kotlin.psi.KtNamedFunction
 
@@ -16,11 +18,10 @@ open class GraphBuilder(protected val project: Project) {
     private var incrementFilesDone: () -> Unit = {}
     private var rbFileFound: (VirtualFile) -> Unit = {}
     private var relevantFiles: List<VirtualFile> = emptyList()
+    private var level: RunBlockingInspection.ExplorationLevel = RunBlockingInspection.ExplorationLevel.DECLARATION
     protected var urlToVirtualFileMap: MutableMap<String, VirtualFile> = mutableMapOf()
     
     protected val rbGraph = RBGraph()
-
-    fun getGraph(): RBGraph = rbGraph
 
     fun setRelevantFiles(relevantFiles: List<VirtualFile>): GraphBuilder {
         this.relevantFiles = relevantFiles
@@ -41,8 +42,13 @@ open class GraphBuilder(protected val project: Project) {
         this.rbFileFound = fileFound
         return this
     }
+
+    fun setExplorationLevel(level: RunBlockingInspection.ExplorationLevel): GraphBuilder {
+        this.level = level
+        return this
+    }
     
-    fun buildGraph(): GraphBuilder {
+    fun buildGraph(): RBGraph {
         totalFilesTodo(relevantFiles.size)
         relevantFiles.forEachIndexed() { index, file ->
             println("Building graph: $index / ${relevantFiles.size}")
@@ -62,7 +68,7 @@ open class GraphBuilder(protected val project: Project) {
             }
             incrementFilesDone()
         }
-        return this
+        return rbGraph
     }
     
     
@@ -94,17 +100,29 @@ open class GraphBuilder(protected val project: Project) {
                 if (!relevantFiles.contains(funFile)) return
 
                 // Find all function overrides
-                val overrides = mutableListOf<KtNamedFunction>(psiFn)
-                psiFn.forEachOverridingElement { _, overrideFn ->
-                    if (overrideFn is KtNamedFunction && relevantFiles.contains(MyPsiUtils.getFileForElement(overrideFn))) overrides.add(overrideFn)
-                    true
+                val toExplore = mutableListOf<KtNamedFunction>(psiFn)
+                
+                when (level) {
+                    RunBlockingInspection.ExplorationLevel.STRICT -> 
+                        if (!psiFn.hasOverridingElement()) toExplore.add(psiFn)
+                    RunBlockingInspection.ExplorationLevel.DECLARATION -> toExplore.add(psiFn)
+                    RunBlockingInspection.ExplorationLevel.ALL -> {
+                        toExplore.add(psiFn)
+                        psiFn.forEachOverridingElement { _, overrideFn ->
+                            if (overrideFn is KtNamedFunction && relevantFiles.contains(
+                                    MyPsiUtils.getFileForElement(overrideFn)
+                                )
+                            ) toExplore.add(overrideFn)
+                            true
+                        }
+                    }
                 }
                 
-                overrides.forEach { fn ->
+                toExplore.forEach { fn ->
                     // Get or create function node and explore
                     val functionNode = rbGraph.getOrCreateFunction(fn)
                     // If no overrides -> Strong connection 
-                    rbGraph.connect(currentNode, functionNode, MyPsiUtils.getUrl(call)!!, overrides.size == 1)
+                    rbGraph.connect(currentNode, functionNode, MyPsiUtils.getUrl(call)!!, toExplore.size == 1)
                     exploreFunDeclaration(fn, functionNode)
                 }
             }

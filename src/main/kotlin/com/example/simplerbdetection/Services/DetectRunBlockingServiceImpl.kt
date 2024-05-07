@@ -4,6 +4,7 @@ import com.example.simplerbdetection.CallGraph.FunctionNode
 import com.example.simplerbdetection.CallGraph.RBGraph
 import com.example.simplerbdetection.ElementFilters
 import com.example.simplerbdetection.MyPsiUtils
+import com.example.simplerbdetection.RunBlockingInspection
 import com.intellij.analysis.AnalysisScope
 import com.intellij.analysis.problemsView.ProblemsProvider
 import com.intellij.openapi.project.Project
@@ -23,7 +24,13 @@ internal class DetectRunBlockingServiceImpl(override val project: Project) : Det
     private val relevantFiles = mutableListOf<VirtualFile>()
     private val rbFiles = mutableSetOf<VirtualFile>()
     private var rbGraph = RBGraph()
+    
+    private val resultsMemo = mutableMapOf<String, List<Pair<String, String>>?>()
 
+    override fun analyzeRunBlocking(element: PsiElement): List<Pair<String, String>>? =
+        MyPsiUtils.getUrl(element)?.let {resultsMemo.getOrPut(it) { analyzeRunBlockingImpl(element) }}
+    
+    
     /**
      * Analyzes the given [element] to determine if it is running inside a coroutine and returns a stack trace
      * if it is. This method assumes [element] is runBlocking. 
@@ -33,7 +40,7 @@ internal class DetectRunBlockingServiceImpl(override val project: Project) : Det
      * @return A list of pairs representing the function name and its call/decl site if the given [element]
      *         is running inside a coroutine, null otherwise.
      */
-    override fun analyzeRunBlocking(element: PsiElement): List<Pair<String, String>>? {
+    private fun analyzeRunBlockingImpl(element: PsiElement): List<Pair<String, String>>? {
         // Find first interesting parent if any, Aka function definition or async builder
         val psiFunOrBuilder = PsiTreeUtil.findFirstParent(element, true) { 
                     it is KtNamedFunction 
@@ -75,10 +82,16 @@ internal class DetectRunBlockingServiceImpl(override val project: Project) : Det
         return null
     }
 
-    override fun analyseProject(scope: AnalysisScope?, totalFilesTodo: ((Int) -> Unit), incrementFilesDone: (() -> Unit)) {
+    override fun processProject(
+        scope: AnalysisScope?,
+        totalFilesTodo: (Int) -> Unit,
+        incrementFilesDone: () -> Unit,
+        level: RunBlockingInspection.ExplorationLevel
+    ) {
         // Get editable kotlin files
+        resultsMemo.clear()
         updateRelevantFiles(scope)
-        fullAnalysis(totalFilesTodo, incrementFilesDone)
+        fullAnalysis(totalFilesTodo, incrementFilesDone, level)
         wholeProject()
     }
 
@@ -104,7 +117,7 @@ internal class DetectRunBlockingServiceImpl(override val project: Project) : Det
     }
     
     // Full project analysis for nested run blocking calls 
-    private fun fullAnalysis(totalFilesTodo: (Int) -> Unit, incrementFilesDone: (() -> Unit)) {
+    private fun fullAnalysis(totalFilesTodo: (Int) -> Unit, incrementFilesDone: (() -> Unit), level: RunBlockingInspection.ExplorationLevel) {
         // Clear rb graph
         rbFiles.clear()
 
@@ -113,8 +126,8 @@ internal class DetectRunBlockingServiceImpl(override val project: Project) : Det
             .setIncrementFilesDoneFunction(incrementFilesDone)
             .setTotalFilesTodo(totalFilesTodo)
             .setRelevantFiles(relevantFiles)
+            .setExplorationLevel(level)
             .buildGraph()
-            .getGraph()
     }
 
     private fun updateRelevantFiles(scope: AnalysisScope?): MutableList<VirtualFile> {
