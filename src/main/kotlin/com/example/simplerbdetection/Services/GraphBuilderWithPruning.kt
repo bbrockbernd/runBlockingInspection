@@ -55,7 +55,6 @@ class GraphBuilderWithPruning(project: Project) : GraphBuilder(project) {
         while (queue.isNotEmpty()) {
             val currentExpr = queue.poll()
             val origin = currentExpr.mainReference.resolve()
-            println()
         }
 
         return false

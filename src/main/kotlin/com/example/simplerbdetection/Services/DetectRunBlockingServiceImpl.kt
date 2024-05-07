@@ -102,12 +102,8 @@ internal class DetectRunBlockingServiceImpl(override val project: Project) : Det
         MyPsiUtils.findRunBlockings(file, project).forEach { rb ->
             val stackTrace = analyzeRunBlocking(rb)
             if (stackTrace != null) {
-                val lineNr = MyPsiUtils.getLineNumber(rb)
                 rbs.add(
                     DetectRunBlockingService.RunBlockingProblem(rb, stackTrace))
-                println("\n\n------------- Found runBlocking in coroutine ------------------------------")
-                stackTrace.forEach { println("  $it") }
-                println("---> RB in async context in file ${file.path}:$lineNr")
             }
         }
         return rbs

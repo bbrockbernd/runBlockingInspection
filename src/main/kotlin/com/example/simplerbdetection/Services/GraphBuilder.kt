@@ -51,7 +51,6 @@ open class GraphBuilder(protected val project: Project) {
     fun buildGraph(): RBGraph {
         totalFilesTodo(relevantFiles.size)
         relevantFiles.forEachIndexed() { index, file ->
-            println("Building graph: $index / ${relevantFiles.size}")
             // Search kotlin file for runBlocking calls, and generate tree
             MyPsiUtils.findRunBlockings(file, project).forEach { rb ->
                 createSubtree(rb)

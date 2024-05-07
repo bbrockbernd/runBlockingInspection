@@ -12,7 +12,5 @@ class RBDetectionAction : AnAction() {
     
     override fun actionPerformed(e: AnActionEvent) {   
         e.project?.service<DetectRunBlockingService>()?.processProject()
-        
-        println("Analysis done")
     }
 }
