@@ -26,7 +26,7 @@ class RunBlockingInspection() : GlobalInspectionTool() {
         
         manager.project.service<DetectRunBlockingService>().processProject(scope, {jobDescriptor.totalAmount = it}, {
             globalContext.incrementJobDoneAmount(jobDescriptor, "Kt file ${jobDescriptor.doneAmount}/${jobDescriptor.totalAmount}")
-        })
+        }, explorationLevel)
         val badRunBlockings = manager.project.service<DetectRunBlockingService>().wholeProject()
         val rbFileMap = mutableMapOf<String, RefFileImpl>()
         badRunBlockings.forEach {

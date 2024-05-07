@@ -100,7 +100,7 @@ open class GraphBuilder(protected val project: Project) {
                 if (!relevantFiles.contains(funFile)) return
 
                 // Find all function overrides
-                val toExplore = mutableListOf<KtNamedFunction>(psiFn)
+                val toExplore = mutableListOf<KtNamedFunction>()
                 
                 when (level) {
                     RunBlockingInspection.ExplorationLevel.STRICT -> 
