@@ -48,7 +48,8 @@ class RunBlockingInspection() : GlobalInspectionTool() {
         }
     }
     
-    private var explorationLevel: ExplorationLevel = ExplorationLevel.DECLARATION 
+    @JvmField
+    var explorationLevel: ExplorationLevel = ExplorationLevel.DECLARATION 
 
     override fun getOptionsPane(): OptPane {
         return OptPane.pane(
