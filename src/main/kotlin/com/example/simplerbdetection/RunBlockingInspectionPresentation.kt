@@ -88,7 +88,7 @@ class RunBlockingInspectionPresentation(
 
     private fun getDescription(callStack: List<Pair<String, String>>): String {
         return buildString {
-            append("<div class=\"problem-description\"><h>RunBlocking in coroutine</h><p><ul>")
+            append("<div class=\"problem-description\"><h>${RunBlockingInspectionBundle.message("presentation.text")}</h><p><ul>")
             callStack.forEach { append("<li><a HREF=${it.second}>${it.first}</a></li>") }
             append("</ul></p></div>")
         }

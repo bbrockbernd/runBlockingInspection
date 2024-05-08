@@ -1,7 +1,5 @@
-package com.example.simplerbdetection.Services
+package com.example.simplerbdetection.CallGraph
 
-import com.example.simplerbdetection.CallGraph.FunctionNode
-import com.example.simplerbdetection.CallGraph.RBGraph
 import com.example.simplerbdetection.ElementFilters
 import com.example.simplerbdetection.MyPsiUtils
 import com.example.simplerbdetection.RunBlockingInspection
@@ -74,7 +72,6 @@ open class GraphBuilder(protected val project: Project) {
     private fun createSubtree(builder: PsiElement) {
         //Add runBlocking root to graph
         val runBlockingNode = rbGraph.addBuilder(builder)
-        // println("Adding runBlocking ${runBlockingNode.id}")
         exploreFunDeclaration(builder, runBlockingNode)
     }
 
@@ -91,7 +88,6 @@ open class GraphBuilder(protected val project: Project) {
 
         for (call in methodCalls) {
             // Find method decl for call
-            //TODO fix deprc call
             val psiFn = call.calleeExpression?.reference?.resolve()
             if (psiFn is KtNamedFunction) {
                 // if method in non-relevant file skip call.calleeExpression.reference.resolve()

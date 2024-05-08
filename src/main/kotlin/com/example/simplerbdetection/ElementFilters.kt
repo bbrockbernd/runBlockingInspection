@@ -1,6 +1,5 @@
 package com.example.simplerbdetection
 
-import com.intellij.psi.impl.source.tree.LeafPsiElement
 import com.intellij.psi.util.PsiElementFilter
 import org.jetbrains.kotlin.psi.KtCallExpression
 import org.jetbrains.kotlin.psi.KtFile
@@ -25,10 +24,6 @@ class ElementFilters {
             }
             false
         }
-        
-        val runBlockingBuilderDeclaration = PsiElementFilter { it is KtNamedFunction && it.fqName?.toString() == "kotlinx.coroutines.runBlocking" }
-        val launchBuilderDeclaration = PsiElementFilter { it is KtNamedFunction && it.fqName?.toString() == "kotlinx.coroutines.launch" }
-        val asyncBuilderDeclaration = PsiElementFilter { it is KtNamedFunction && it.fqName?.toString() == "kotlinx.coroutines.async" }
         
         val suspendFun = PsiElementFilter { el -> 
             if (el is KtNamedFunction) {
@@ -62,8 +57,9 @@ class ElementFilters {
             }
             false
         }
-        
-        val runBlockingDeclarationFile = PsiElementFilter { it is KtFile && it.name == "Builders.kt" && it.packageFqName.toString() == "kotlinx.coroutines"}
-        val launchAndAsyncDeclarationFile = PsiElementFilter { it is KtFile && it.name == "Builders.common.kt" && it.packageFqName.toString() == "kotlinx.coroutines"}
+
+        val runBlockingBuilderDeclaration = PsiElementFilter { it is KtNamedFunction && it.fqName?.toString() == "kotlinx.coroutines.runBlocking" }
+        val launchBuilderDeclaration = PsiElementFilter { it is KtNamedFunction && it.fqName?.toString() == "kotlinx.coroutines.launch" }
+        val asyncBuilderDeclaration = PsiElementFilter { it is KtNamedFunction && it.fqName?.toString() == "kotlinx.coroutines.async" }
     }
 }

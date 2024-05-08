@@ -62,10 +62,6 @@ class MyPsiUtils {
         fun findParentFunPsiElement(psiElement: PsiElement): KtNamedFunction? {
             return PsiTreeUtil.findFirstParent(psiElement) { it is KtNamedFunction } as KtNamedFunction?
         }
-
-        fun findParentDotQualified(psiElement: PsiElement): KtDotQualifiedExpression? {
-            return PsiTreeUtil.findFirstParent(psiElement) { it is KtDotQualifiedExpression } as KtDotQualifiedExpression?
-        }
         
     }
 }

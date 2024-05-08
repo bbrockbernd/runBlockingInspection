@@ -28,7 +28,6 @@
     <extensions defaultExtensionNs="com.intellij">
         <projectService serviceImplementation="com.example.simplerbdetection.Services.DetectRunBlockingServiceImpl"
                         serviceInterface="com.example.simplerbdetection.Services.DetectRunBlockingService"/>
-<!--        <annotator language="kotlin" implementationClass="com.example.simplerbdetection.Annotators.RunBlockingAnnotator"/>-->
         <globalInspection groupPath="Kotlin" language="kotlin"
                           shortName="RunBlocking"
                           displayName="RunBlocking inspection"
@@ -38,22 +37,5 @@
                           implementationClass="com.example.simplerbdetection.RunBlockingInspection"
                           presentation="com.example.simplerbdetection.RunBlockingInspectionPresentation">
         </globalInspection>
-<!--        <problemsViewPanelProvider implementation="com.example.simplerbdetection.views.RunBlockingView"/>-->
     </extensions>
-    
-    <actions>
-        <action 
-                id="org.intllij.RBDetectionAction"
-                class="com.example.simplerbdetection.Actions.RBDetectionAction"
-                text="Detect RunBlocking"
-                description="Start deadlock detection">
-            <add-to-group group-id="CodeMenu" anchor="first"/>
-            
-        </action>
-        <action id="com.example.simplerbdetection.Actions.TestButton"
-                class="com.example.simplerbdetection.Actions.TestButton" text="TestButton" description="Testtesttest">
-            <add-to-group group-id="CodeMenu" anchor="first"/>
-        </action>
-    </actions>
-    
 </idea-plugin>

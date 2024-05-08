@@ -25,7 +25,7 @@ class RunBlockingInspection() : GlobalInspectionTool() {
     ) {
         
         manager.project.service<DetectRunBlockingService>().processProject(scope, {jobDescriptor.totalAmount = it}, {
-            globalContext.incrementJobDoneAmount(jobDescriptor, "Kt file ${jobDescriptor.doneAmount}/${jobDescriptor.totalAmount}")
+            globalContext.incrementJobDoneAmount(jobDescriptor, RunBlockingInspectionBundle.message("analysis.graphbuilding.progress", jobDescriptor.doneAmount, jobDescriptor.totalAmount))
         }, explorationLevel)
         val badRunBlockings = manager.project.service<DetectRunBlockingService>().wholeProject()
         val rbFileMap = mutableMapOf<String, RefFileImpl>()
@@ -53,10 +53,10 @@ class RunBlockingInspection() : GlobalInspectionTool() {
 
     override fun getOptionsPane(): OptPane {
         return OptPane.pane(
-            OptPane.dropdown("explorationLevel", "Explore virtual functions",
-                OptPane.option(ExplorationLevel.STRICT, "Never"),
-                OptPane.option(ExplorationLevel.DECLARATION, "Only declared type"), 
-                OptPane.option(ExplorationLevel.ALL, "All")
+            OptPane.dropdown("explorationLevel", RunBlockingInspectionBundle.message("presentation.settings.exploration.title"),
+                OptPane.option(ExplorationLevel.STRICT, RunBlockingInspectionBundle.message("presentation.settings.exploration.option.strict")),
+                OptPane.option(ExplorationLevel.DECLARATION, RunBlockingInspectionBundle.message("presentation.settings.exploration.option.declaration")), 
+                OptPane.option(ExplorationLevel.ALL, RunBlockingInspectionBundle.message("presentation.settings.exploration.option.all"))
                 )
         )
     }
