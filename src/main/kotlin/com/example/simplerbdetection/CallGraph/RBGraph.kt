@@ -1,4 +1,4 @@
-package com.example.simplerbdetection.callgraph
+package com.example.simplerbdetection.CallGraph
 
 import com.example.simplerbdetection.utils.MyPsiUtils
 import com.intellij.psi.PsiElement

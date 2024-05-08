@@ -58,7 +58,14 @@ class SimpleRunBlockingTest: LightJavaCodeInsightFixtureTestCase() {
             val analysisScope = AnalysisScope(myFixture.project, psiFiles)
             val toolWrapper = GlobalInspectionToolWrapper(RunBlockingInspection())
             val context = createGlobalContextForTool(analysisScope, myFixture.project, listOf(toolWrapper))
-            runInEdtAndWait { 
+            (toolWrapper.tool as RunBlockingInspection).explorationLevel =
+                when (test.strictness) {
+                    "strict" -> RunBlockingInspection.ExplorationLevel.STRICT
+                    "all" -> RunBlockingInspection.ExplorationLevel.ALL
+                    else -> RunBlockingInspection.ExplorationLevel.DECLARATION
+                }
+            
+            runInEdtAndWait {
                 InspectionTestUtil.runTool(toolWrapper, analysisScope, context)
                 val results = myFixture.project.service<DetectRunBlockingService>().checkAllRunBlockings()
                 assertResults(results, test)
@@ -112,7 +119,7 @@ class SimpleRunBlockingTest: LightJavaCodeInsightFixtureTestCase() {
     data class Result(val trace: List<Trace>)
 
     @Serializable
-    data class Test(val name: String, val inputFiles: List<String>, val results: List<Result>)
+    data class Test(val name: String, val inputFiles: List<String>, val results: List<Result>, val strictness: String = "declared")
 
     @Serializable
     data class Tests(val tests: List<Test>)

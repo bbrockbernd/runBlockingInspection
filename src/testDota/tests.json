@@ -116,6 +116,7 @@
 
     {"name": "Single sub method runBlocking, call to virtual function",
       "inputFiles": ["SingleSubA.kt"],
+      "strictness": "all",
       "results": [{"trace":  [
         {
           "fqName": "kotlinx.coroutines.runBlocking",
@@ -148,6 +149,7 @@
     
     {"name": "Interface(Declared) -> Sub -> SubSub (runBlocking, Initialized)",
       "inputFiles": ["SubSubOnlyFirst.kt"],
+      "strictness": "all",
       "results": [{"trace":  [
         {
           "fqName": "kotlinx.coroutines.runBlocking",
@@ -164,6 +166,7 @@
 
     {"name": "Interface(Declared) -> SubRight || SubLeft (runBlocking, Initialized)",
       "inputFiles": ["TwoSubOnlyLeft.kt"],
+      "strictness": "all",
       "results": [{"trace":  [
         {
           "fqName": "kotlinx.coroutines.runBlocking",

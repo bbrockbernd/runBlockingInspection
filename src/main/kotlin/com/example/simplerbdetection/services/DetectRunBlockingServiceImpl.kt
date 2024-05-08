@@ -1,9 +1,9 @@
 package com.example.simplerbdetection.services
 
-import com.example.simplerbdetection.callgraph.CallEdge
-import com.example.simplerbdetection.callgraph.FunctionNode
-import com.example.simplerbdetection.callgraph.GraphBuilder
-import com.example.simplerbdetection.callgraph.RBGraph
+import com.example.simplerbdetection.CallGraph.CallEdge
+import com.example.simplerbdetection.CallGraph.FunctionNode
+import com.example.simplerbdetection.CallGraph.GraphBuilder
+import com.example.simplerbdetection.CallGraph.RBGraph
 import com.example.simplerbdetection.utils.ElementFilters
 import com.example.simplerbdetection.utils.MyPsiUtils
 import com.example.simplerbdetection.RunBlockingInspection
