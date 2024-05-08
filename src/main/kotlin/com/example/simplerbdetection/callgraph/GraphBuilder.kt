@@ -1,7 +1,7 @@
-package com.example.simplerbdetection.CallGraph
+package com.example.simplerbdetection.callgraph
 
-import com.example.simplerbdetection.ElementFilters
-import com.example.simplerbdetection.MyPsiUtils
+import com.example.simplerbdetection.utils.ElementFilters
+import com.example.simplerbdetection.utils.MyPsiUtils
 import com.example.simplerbdetection.RunBlockingInspection
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
@@ -11,15 +11,28 @@ import org.jetbrains.kotlin.idea.search.declarationsSearch.hasOverridingElement
 import org.jetbrains.kotlin.psi.KtCallExpression
 import org.jetbrains.kotlin.psi.KtNamedFunction
 
-open class GraphBuilder(protected val project: Project) {
+
+/**
+ * Constructs runBlocking graph, based on settings provided:
+ *
+ * @property project Project
+ * @property totalFilesTodo Optional callback for progress indication, sets the total amount of files.
+ * @property incrementFilesDone Optional callback increment files done.
+ * @property rbFileFound The callback function to be called when a relevant file is found.
+ * @property relevantFiles The list of relevant files to be processed.
+ * @property level The exploration level for building the graph.
+ * @property urlToVirtualFileMap A map from URL to virtual file for relevant files.
+ * @property rbGraph The RBGraph object representing the graph.
+ */
+class GraphBuilder(private val project: Project) {
     private var totalFilesTodo: (Int) -> Unit = {}
     private var incrementFilesDone: () -> Unit = {}
     private var rbFileFound: (VirtualFile) -> Unit = {}
     private var relevantFiles: List<VirtualFile> = emptyList()
     private var level: RunBlockingInspection.ExplorationLevel = RunBlockingInspection.ExplorationLevel.DECLARATION
-    protected var urlToVirtualFileMap: MutableMap<String, VirtualFile> = mutableMapOf()
+    private var urlToVirtualFileMap: MutableMap<String, VirtualFile> = mutableMapOf()
     
-    protected val rbGraph = RBGraph()
+    private val rbGraph = RBGraph()
 
     fun setRelevantFiles(relevantFiles: List<VirtualFile>): GraphBuilder {
         this.relevantFiles = relevantFiles

@@ -1,4 +1,4 @@
-package com.example.simplerbdetection
+package com.example.simplerbdetection.utils
 
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
@@ -7,10 +7,12 @@ import com.intellij.psi.PsiFileSystemItem
 import com.intellij.psi.PsiManager
 import com.intellij.psi.PsiRecursiveElementVisitor
 import com.intellij.psi.util.PsiTreeUtil
-import org.jetbrains.kotlin.psi.KtDotQualifiedExpression
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtNamedFunction
 
+/**
+ * Helper functions for custom PSI traversal needs.
+ */
 class MyPsiUtils {
     companion object {
         fun findAllChildren(startElement: PsiElement, condition: (PsiElement) -> Boolean, fenceCondition: (PsiElement) -> Boolean): List<PsiElement> {

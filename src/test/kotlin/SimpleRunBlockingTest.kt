@@ -1,5 +1,5 @@
 import com.example.simplerbdetection.RunBlockingInspection
-import com.example.simplerbdetection.Services.DetectRunBlockingService
+import com.example.simplerbdetection.services.DetectRunBlockingService
 import com.intellij.analysis.AnalysisScope
 import com.intellij.codeInspection.ex.GlobalInspectionToolWrapper
 import com.intellij.openapi.components.service
@@ -19,7 +19,6 @@ import org.jetbrains.kotlin.util.collectionUtils.concat
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.DynamicTest.dynamicTest
 import java.io.File
-import java.util.stream.Stream
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class SimpleRunBlockingTest: LightJavaCodeInsightFixtureTestCase() {
@@ -61,7 +60,7 @@ class SimpleRunBlockingTest: LightJavaCodeInsightFixtureTestCase() {
             val context = createGlobalContextForTool(analysisScope, myFixture.project, listOf(toolWrapper))
             runInEdtAndWait { 
                 InspectionTestUtil.runTool(toolWrapper, analysisScope, context)
-                val results = myFixture.project.service<DetectRunBlockingService>().wholeProject()
+                val results = myFixture.project.service<DetectRunBlockingService>().checkAllRunBlockings()
                 assertResults(results, test)
             }
         }

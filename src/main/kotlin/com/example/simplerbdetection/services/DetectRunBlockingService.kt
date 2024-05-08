@@ -1,12 +1,12 @@
-package com.example.simplerbdetection.Services
+package com.example.simplerbdetection.services
 
 import com.example.simplerbdetection.RunBlockingInspection
 import com.intellij.analysis.AnalysisScope
 import com.intellij.psi.PsiElement
 
 interface DetectRunBlockingService {
-    fun analyzeRunBlocking(element: PsiElement): List<Pair<String, String>>?
-    fun wholeProject(): List<RunBlockingProblem>
+    fun checkRunBlocking(element: PsiElement): List<Pair<String, String>>?
+    fun checkAllRunBlockings(): List<RunBlockingProblem>
     fun processProject(
         scope: AnalysisScope? = null,
         totalFilesTodo: ((Int) -> Unit) = {},

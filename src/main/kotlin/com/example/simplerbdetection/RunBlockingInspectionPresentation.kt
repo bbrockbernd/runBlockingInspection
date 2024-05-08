@@ -1,6 +1,6 @@
 package com.example.simplerbdetection
 
-import com.example.simplerbdetection.Services.DetectRunBlockingService
+import com.example.simplerbdetection.services.DetectRunBlockingService
 import com.intellij.codeInspection.CommonProblemDescriptor
 import com.intellij.codeInspection.ProblemDescriptor
 import com.intellij.codeInspection.ex.GlobalInspectionContextImpl
@@ -32,7 +32,7 @@ class RunBlockingInspectionPresentation(
 
     override fun getCustomPreviewPanel(descriptor: CommonProblemDescriptor, parent: Disposable): JComponent? {
         if (descriptor is ProblemDescriptor) {
-            val stackTrace = descriptor.psiElement.project.service<DetectRunBlockingService>().analyzeRunBlocking(descriptor.psiElement.parent)
+            val stackTrace = descriptor.psiElement.project.service<DetectRunBlockingService>().checkRunBlocking(descriptor.psiElement.parent)
             if (stackTrace != null) {
                 val htmlView = DescriptionEditorPane()
                 val css = (htmlView.editorKit as HTMLEditorKit).styleSheet

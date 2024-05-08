@@ -1,7 +1,7 @@
-package com.example.simplerbdetection.CallGraph
+package com.example.simplerbdetection.callgraph
 
-import com.example.simplerbdetection.ElementFilters
-import com.example.simplerbdetection.MyPsiUtils
+import com.example.simplerbdetection.utils.ElementFilters
+import com.example.simplerbdetection.utils.MyPsiUtils
 import org.jetbrains.kotlin.psi.KtNamedFunction
 import org.jetbrains.kotlin.psi.psiUtil.containingClassOrObject
 

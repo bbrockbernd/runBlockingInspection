@@ -1,8 +1,7 @@
-package com.example.simplerbdetection
+package com.example.simplerbdetection.utils
 
 import com.intellij.psi.util.PsiElementFilter
 import org.jetbrains.kotlin.psi.KtCallExpression
-import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtNameReferenceExpression
 import org.jetbrains.kotlin.psi.KtNamedFunction
 import org.jetbrains.kotlin.psi.psiUtil.hasSuspendModifier

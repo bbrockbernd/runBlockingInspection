@@ -26,8 +26,8 @@
     <!-- Extension points defined by the plugin.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
     <extensions defaultExtensionNs="com.intellij">
-        <projectService serviceImplementation="com.example.simplerbdetection.Services.DetectRunBlockingServiceImpl"
-                        serviceInterface="com.example.simplerbdetection.Services.DetectRunBlockingService"/>
+        <projectService serviceImplementation="com.example.simplerbdetection.services.DetectRunBlockingServiceImpl"
+                        serviceInterface="com.example.simplerbdetection.services.DetectRunBlockingService"/>
         <globalInspection groupPath="Kotlin" language="kotlin"
                           shortName="RunBlocking"
                           displayName="RunBlocking inspection"

@@ -1,6 +1,6 @@
 package com.example.simplerbdetection
 
-import com.example.simplerbdetection.Services.DetectRunBlockingService
+import com.example.simplerbdetection.services.DetectRunBlockingService
 import com.intellij.analysis.AnalysisScope
 import com.intellij.codeInspection.*
 import com.intellij.codeInspection.ex.JobDescriptor
@@ -27,7 +27,7 @@ class RunBlockingInspection() : GlobalInspectionTool() {
         manager.project.service<DetectRunBlockingService>().processProject(scope, {jobDescriptor.totalAmount = it}, {
             globalContext.incrementJobDoneAmount(jobDescriptor, RunBlockingInspectionBundle.message("analysis.graphbuilding.progress", jobDescriptor.doneAmount, jobDescriptor.totalAmount))
         }, explorationLevel)
-        val badRunBlockings = manager.project.service<DetectRunBlockingService>().wholeProject()
+        val badRunBlockings = manager.project.service<DetectRunBlockingService>().checkAllRunBlockings()
         val rbFileMap = mutableMapOf<String, RefFileImpl>()
         badRunBlockings.forEach {
             val refEntity = rbFileMap.computeIfAbsent(it.element.containingFile.virtualFile.path)

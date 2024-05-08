@@ -1,4 +1,4 @@
-package com.example.simplerbdetection.CallGraph
+package com.example.simplerbdetection.callgraph
 
 data class CallEdge(
     val parent: FunctionNode,

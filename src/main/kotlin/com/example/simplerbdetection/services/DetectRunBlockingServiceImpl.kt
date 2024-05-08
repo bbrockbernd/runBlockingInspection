@@ -1,10 +1,11 @@
-package com.example.simplerbdetection.Services
+package com.example.simplerbdetection.services
 
-import com.example.simplerbdetection.CallGraph.FunctionNode
-import com.example.simplerbdetection.CallGraph.GraphBuilder
-import com.example.simplerbdetection.CallGraph.RBGraph
-import com.example.simplerbdetection.ElementFilters
-import com.example.simplerbdetection.MyPsiUtils
+import com.example.simplerbdetection.callgraph.CallEdge
+import com.example.simplerbdetection.callgraph.FunctionNode
+import com.example.simplerbdetection.callgraph.GraphBuilder
+import com.example.simplerbdetection.callgraph.RBGraph
+import com.example.simplerbdetection.utils.ElementFilters
+import com.example.simplerbdetection.utils.MyPsiUtils
 import com.example.simplerbdetection.RunBlockingInspection
 import com.example.simplerbdetection.RunBlockingInspectionBundle
 import com.intellij.analysis.AnalysisScope
@@ -27,10 +28,6 @@ internal class DetectRunBlockingServiceImpl(override val project: Project) : Det
 
     private val resultsMemo = mutableMapOf<String, List<Pair<String, String>>?>()
 
-    override fun analyzeRunBlocking(element: PsiElement): List<Pair<String, String>>? =
-        MyPsiUtils.getUrl(element)?.let { resultsMemo.computeIfAbsent(it) { analyzeRunBlockingImpl(element) } }
-
-
     /**
      * Analyzes the given [element] to determine if it is running inside a coroutine and returns a stack trace
      * if it is. This method assumes [element] is runBlocking.
@@ -40,7 +37,10 @@ internal class DetectRunBlockingServiceImpl(override val project: Project) : Det
      * @return A list of pairs representing the function name and its call/decl site if the given [element]
      *         is running inside a coroutine, null otherwise.
      */
-    private fun analyzeRunBlockingImpl(element: PsiElement): List<Pair<String, String>>? {
+    override fun checkRunBlocking(element: PsiElement): List<Pair<String, String>>? =
+        MyPsiUtils.getUrl(element)?.let { resultsMemo.computeIfAbsent(it) { analyzeRunBlocking(element) } }
+
+    private fun analyzeRunBlocking(element: PsiElement): List<Pair<String, String>>? {
         // Find first interesting parent if any, Aka function definition or async builder
         val psiFunOrBuilder = PsiTreeUtil.findFirstParent(element, true) {
             it is KtNamedFunction
@@ -57,28 +57,7 @@ internal class DetectRunBlockingServiceImpl(override val project: Project) : Det
                 if (funNode.asyncContext) {
                     // Find the shortest path from async primitive to this runBlocking
                     val callEdgeTrace = rbGraph.findBuilderBFS(funNode)
-
-                    val stackTrace =
-                        if (callEdgeTrace.size != 0) mutableListOf<Pair<String, String>>(
-                            Pair(
-                                callEdgeTrace[0].parent.fqName,
-                                callEdgeTrace[0].parent.declarationSite
-                            )
-                        )
-                        else mutableListOf<Pair<String, String>>(Pair(funNode.fqName, funNode.declarationSite))
-
-                    for (i in 0..<callEdgeTrace.size) {
-                        stackTrace.add(Pair(callEdgeTrace[i].child.fqName, callEdgeTrace[i].callSite))
-                    }
-                    stackTrace.add(
-                        Pair(
-                            RunBlockingInspectionBundle.message("analysis.found.runblocking"),
-                            MyPsiUtils.getUrl(element) ?: ""
-                        )
-                    )
-
-
-                    return stackTrace
+                    return generateStackTrace(callEdgeTrace, funNode, element)
                 }
                 return null
             }
@@ -97,6 +76,30 @@ internal class DetectRunBlockingServiceImpl(override val project: Project) : Det
         return null
     }
 
+    /**
+     * Auxilary function which maps trace to something presentable.
+     */
+    private fun generateStackTrace(
+        callEdgeTrace: List<CallEdge>,
+        funNode: FunctionNode,
+        element: PsiElement
+    ): MutableList<Pair<String, String>> {
+        val stackTrace =
+            if (callEdgeTrace.size != 0) mutableListOf<Pair<String, String>>(Pair(
+                    callEdgeTrace[0].parent.fqName,
+                    callEdgeTrace[0].parent.declarationSite))
+            else mutableListOf<Pair<String, String>>(Pair(funNode.fqName, funNode.declarationSite))
+
+        for (i in 0..<callEdgeTrace.size) {
+            stackTrace.add(Pair(callEdgeTrace[i].child.fqName, callEdgeTrace[i].callSite))
+        }
+        stackTrace.add(Pair(
+                RunBlockingInspectionBundle.message("analysis.found.runblocking"),
+                MyPsiUtils.getUrl(element) ?: ""
+            ))
+        return stackTrace
+    }
+
     override fun processProject(
         scope: AnalysisScope?,
         totalFilesTodo: (Int) -> Unit,
@@ -106,10 +109,10 @@ internal class DetectRunBlockingServiceImpl(override val project: Project) : Det
         // Get editable kotlin files
         updateRelevantFiles(scope)
         fullAnalysis(totalFilesTodo, incrementFilesDone, level)
-        wholeProject()
+        checkAllRunBlockings()
     }
 
-    override fun wholeProject(): List<DetectRunBlockingService.RunBlockingProblem> {
+    override fun checkAllRunBlockings(): List<DetectRunBlockingService.RunBlockingProblem> {
         return rbFiles.fold(mutableListOf()) { results, file ->
             results.concat(checkRunBlockingsForFile(file))!!.toMutableList()
         }
@@ -119,7 +122,7 @@ internal class DetectRunBlockingServiceImpl(override val project: Project) : Det
         if (!rbFiles.contains(file)) return emptyList()
         val rbs: MutableList<DetectRunBlockingService.RunBlockingProblem> = mutableListOf()
         MyPsiUtils.findRunBlockings(file, project).forEach { rb ->
-            val stackTrace = analyzeRunBlocking(rb)
+            val stackTrace = checkRunBlocking(rb)
             if (stackTrace != null) {
                 rbs.add(
                     DetectRunBlockingService.RunBlockingProblem(rb, stackTrace)
@@ -148,6 +151,9 @@ internal class DetectRunBlockingServiceImpl(override val project: Project) : Det
             .buildGraph()
     }
 
+    /**
+     * Get all kt files in scope.
+     */
     private fun updateRelevantFiles(scope: AnalysisScope?): MutableList<VirtualFile> {
         relevantFiles.clear()
 
