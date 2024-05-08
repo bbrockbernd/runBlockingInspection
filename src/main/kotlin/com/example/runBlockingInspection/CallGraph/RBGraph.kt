@@ -1,6 +1,6 @@
-package com.example.simplerbdetection.CallGraph
+package com.example.runBlockingInspection.CallGraph
 
-import com.example.simplerbdetection.utils.MyPsiUtils
+import com.example.runBlockingInspection.utils.MyPsiUtils
 import com.intellij.psi.PsiElement
 import org.jetbrains.kotlin.psi.KtCallExpression
 import org.jetbrains.kotlin.psi.KtNamedFunction

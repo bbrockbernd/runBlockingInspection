@@ -1,8 +1,8 @@
-package com.example.simplerbdetection.CallGraph
+package com.example.runBlockingInspection.CallGraph
 
-import com.example.simplerbdetection.utils.ElementFilters
-import com.example.simplerbdetection.utils.MyPsiUtils
-import com.example.simplerbdetection.RunBlockingInspection
+import com.example.runBlockingInspection.utils.ElementFilters
+import com.example.runBlockingInspection.utils.MyPsiUtils
+import com.example.runBlockingInspection.RunBlockingInspection
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiElement

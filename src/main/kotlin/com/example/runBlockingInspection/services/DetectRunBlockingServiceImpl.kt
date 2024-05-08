@@ -1,13 +1,13 @@
-package com.example.simplerbdetection.services
+package com.example.runBlockingInspection.services
 
-import com.example.simplerbdetection.CallGraph.CallEdge
-import com.example.simplerbdetection.CallGraph.FunctionNode
-import com.example.simplerbdetection.CallGraph.GraphBuilder
-import com.example.simplerbdetection.CallGraph.RBGraph
-import com.example.simplerbdetection.utils.ElementFilters
-import com.example.simplerbdetection.utils.MyPsiUtils
-import com.example.simplerbdetection.RunBlockingInspection
-import com.example.simplerbdetection.RunBlockingInspectionBundle
+import com.example.runBlockingInspection.CallGraph.CallEdge
+import com.example.runBlockingInspection.CallGraph.FunctionNode
+import com.example.runBlockingInspection.CallGraph.GraphBuilder
+import com.example.runBlockingInspection.CallGraph.RBGraph
+import com.example.runBlockingInspection.utils.ElementFilters
+import com.example.runBlockingInspection.utils.MyPsiUtils
+import com.example.runBlockingInspection.RunBlockingInspection
+import com.example.runBlockingInspection.RunBlockingInspectionBundle
 import com.intellij.analysis.AnalysisScope
 import com.intellij.analysis.problemsView.ProblemsProvider
 import com.intellij.openapi.project.Project

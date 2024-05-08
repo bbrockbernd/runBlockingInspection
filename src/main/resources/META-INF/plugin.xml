@@ -5,7 +5,8 @@
 
     <!-- Public plugin name should be written in Title Case.
          Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-name -->
-    <name>SimpleRBDetection</name>
+    <!--suppress PluginXmlCapitalization -->
+    <name>runBlockingInspection</name>
 
     <!-- A displayed Vendor name or Organization ID displayed on the Plugins Page. -->
     <vendor email="support@yourcompany.com" url="https://www.yourcompany.com">YourCompany</vendor>
@@ -26,16 +27,16 @@
     <!-- Extension points defined by the plugin.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
     <extensions defaultExtensionNs="com.intellij">
-        <projectService serviceImplementation="com.example.simplerbdetection.services.DetectRunBlockingServiceImpl"
-                        serviceInterface="com.example.simplerbdetection.services.DetectRunBlockingService"/>
+        <projectService serviceImplementation="com.example.runBlockingInspection.services.DetectRunBlockingServiceImpl"
+                        serviceInterface="com.example.runBlockingInspection.services.DetectRunBlockingService"/>
         <globalInspection groupPath="Kotlin" language="kotlin"
                           shortName="RunBlocking"
                           displayName="RunBlocking inspection"
                           groupName="Coroutine inspections"
                           enabledByDefault="true"
                           level="WARNING"
-                          implementationClass="com.example.simplerbdetection.RunBlockingInspection"
-                          presentation="com.example.simplerbdetection.RunBlockingInspectionPresentation">
+                          implementationClass="com.example.runBlockingInspection.RunBlockingInspection"
+                          presentation="com.example.runBlockingInspection.RunBlockingInspectionPresentation">
         </globalInspection>
     </extensions>
 </idea-plugin>

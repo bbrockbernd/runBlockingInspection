@@ -1,6 +1,6 @@
-package com.example.simplerbdetection
+package com.example.runBlockingInspection
 
-import com.example.simplerbdetection.services.DetectRunBlockingService
+import com.example.runBlockingInspection.services.DetectRunBlockingService
 import com.intellij.analysis.AnalysisScope
 import com.intellij.codeInspection.*
 import com.intellij.codeInspection.ex.JobDescriptor

@@ -1,6 +1,6 @@
-package com.example.simplerbdetection.services
+package com.example.runBlockingInspection.services
 
-import com.example.simplerbdetection.RunBlockingInspection
+import com.example.runBlockingInspection.RunBlockingInspection
 import com.intellij.analysis.AnalysisScope
 import com.intellij.psi.PsiElement
 

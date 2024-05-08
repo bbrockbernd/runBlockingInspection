@@ -1,4 +1,4 @@
-package com.example.simplerbdetection.utils
+package com.example.runBlockingInspection.utils
 
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile

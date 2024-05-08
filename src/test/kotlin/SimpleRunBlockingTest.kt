@@ -1,5 +1,5 @@
-import com.example.simplerbdetection.RunBlockingInspection
-import com.example.simplerbdetection.services.DetectRunBlockingService
+import com.example.runBlockingInspection.RunBlockingInspection
+import com.example.runBlockingInspection.services.DetectRunBlockingService
 import com.intellij.analysis.AnalysisScope
 import com.intellij.codeInspection.ex.GlobalInspectionToolWrapper
 import com.intellij.openapi.components.service

@@ -1,7 +1,7 @@
-package com.example.simplerbdetection.CallGraph
+package com.example.runBlockingInspection.CallGraph
 
-import com.example.simplerbdetection.utils.ElementFilters
-import com.example.simplerbdetection.utils.MyPsiUtils
+import com.example.runBlockingInspection.utils.ElementFilters
+import com.example.runBlockingInspection.utils.MyPsiUtils
 import org.jetbrains.kotlin.psi.KtNamedFunction
 import org.jetbrains.kotlin.psi.psiUtil.containingClassOrObject
 

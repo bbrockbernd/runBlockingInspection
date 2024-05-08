@@ -1,4 +1,4 @@
-package com.example.simplerbdetection
+package com.example.runBlockingInspection
 
 import com.intellij.DynamicBundle
 import org.jetbrains.annotations.PropertyKey

@@ -1,4 +1,4 @@
-package com.example.simplerbdetection.utils
+package com.example.runBlockingInspection.utils
 
 import com.intellij.psi.util.PsiElementFilter
 import org.jetbrains.kotlin.psi.KtCallExpression
