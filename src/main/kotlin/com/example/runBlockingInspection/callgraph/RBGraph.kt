@@ -1,4 +1,4 @@
-package com.example.runBlockingInspection.CallGraph
+package com.example.runBlockingInspection.callgraph
 
 import com.example.runBlockingInspection.utils.MyPsiUtils
 import com.intellij.psi.PsiElement

@@ -1,4 +1,4 @@
-package com.example.runBlockingInspection.CallGraph
+package com.example.runBlockingInspection.callgraph
 
 import com.example.runBlockingInspection.utils.ElementFilters
 import com.example.runBlockingInspection.utils.MyPsiUtils

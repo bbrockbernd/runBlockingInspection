@@ -1,4 +1,4 @@
-package com.example.runBlockingInspection.CallGraph
+package com.example.runBlockingInspection.callgraph
 
 data class CallEdge(
     val parent: FunctionNode,

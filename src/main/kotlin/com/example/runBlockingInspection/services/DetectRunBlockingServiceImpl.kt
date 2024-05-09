@@ -1,9 +1,9 @@
 package com.example.runBlockingInspection.services
 
-import com.example.runBlockingInspection.CallGraph.CallEdge
-import com.example.runBlockingInspection.CallGraph.FunctionNode
-import com.example.runBlockingInspection.CallGraph.GraphBuilder
-import com.example.runBlockingInspection.CallGraph.RBGraph
+import com.example.runBlockingInspection.callgraph.CallEdge
+import com.example.runBlockingInspection.callgraph.FunctionNode
+import com.example.runBlockingInspection.callgraph.GraphBuilder
+import com.example.runBlockingInspection.callgraph.RBGraph
 import com.example.runBlockingInspection.utils.ElementFilters
 import com.example.runBlockingInspection.utils.MyPsiUtils
 import com.example.runBlockingInspection.RunBlockingInspection
