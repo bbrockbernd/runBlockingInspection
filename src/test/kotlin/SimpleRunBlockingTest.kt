@@ -42,7 +42,7 @@ class SimpleRunBlockingTest: LightJavaCodeInsightFixtureTestCase() {
     
     @TestFactory
     fun runIndividualTest(): Collection<DynamicTest> {
-        val testIndex = 3
+        val testIndex = 11
         return listOf(runTest(myTests.tests[testIndex]))
     }
     

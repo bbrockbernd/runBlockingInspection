@@ -26,9 +26,21 @@ class MyPsiUtils {
             })
             return foundChildren
         }
+        
         fun findAllChildren(startElement: PsiElement, condition: (PsiElement) -> Boolean): List<PsiElement>{
           return findAllChildren(startElement, condition) { false }
         }
+        
+        fun findParent(startElement: PsiElement, condition: (PsiElement) -> Boolean, fenceCondition: (PsiElement) -> Boolean): PsiElement? {
+            var currentElement: PsiElement? = startElement
+            while (currentElement != null) {
+                if (fenceCondition(currentElement)) return null
+                if (condition(currentElement)) return currentElement
+                currentElement = currentElement.parent
+            }
+            return null
+        }
+        
         fun getLineNumber(psiElement: PsiElement) : Int {
             val document = psiElement.containingFile.viewProvider.document
             return document?.getLineNumber(psiElement.textRange.startOffset)?.plus(1) ?: -1

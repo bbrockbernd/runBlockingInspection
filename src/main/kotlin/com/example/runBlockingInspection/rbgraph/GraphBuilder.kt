@@ -1,4 +1,4 @@
-package com.example.runBlockingInspection.callgraph
+package com.example.runBlockingInspection.rbgraph
 
 import com.example.runBlockingInspection.utils.ElementFilters
 import com.example.runBlockingInspection.utils.MyPsiUtils
@@ -9,6 +9,7 @@ import com.intellij.psi.PsiElement
 import org.jetbrains.kotlin.idea.search.declarationsSearch.forEachOverridingElement
 import org.jetbrains.kotlin.idea.search.declarationsSearch.hasOverridingElement
 import org.jetbrains.kotlin.psi.KtCallExpression
+import org.jetbrains.kotlin.psi.KtLambdaExpression
 import org.jetbrains.kotlin.psi.KtNamedFunction
 
 
@@ -85,27 +86,47 @@ class GraphBuilder(private val project: Project) {
     private fun createSubtree(builder: PsiElement) {
         //Add runBlocking root to graph
         val runBlockingNode = rbGraph.addBuilder(builder)
-        exploreFunDeclaration(builder, runBlockingNode)
+        // Go straight to lambda arg
+        if (builder is KtCallExpression) {
+            val lam = builder.lambdaArguments.lastOrNull()?.getLambdaExpression() ?: return
+            exploreFunDeclaration(lam, runBlockingNode)
+        }
+    }
+    
+    private fun extractCallsFromBody(body: PsiElement): List<KtCallExpression> {
+        val methodCalls: List<KtCallExpression> = MyPsiUtils.findAllChildren(body, { it is KtCallExpression },
+            { ElementFilters.launchBuilder.isAccepted(it)
+                    || ElementFilters.asyncBuilder.isAccepted(it)
+                    || ElementFilters.runBlockingBuilderInvocation.isAccepted(it)
+                    || it is KtLambdaExpression
+            }).filterIsInstance<KtCallExpression>()
+
+        // Find all lambdas but not nested lambdas.
+        val lambdaExprs = MyPsiUtils.findAllChildren(body, { it is KtLambdaExpression },
+            { it.parent is KtLambdaExpression }
+        ).filterIsInstance<KtLambdaExpression>()
+
+        // Filter out lambdas that are not parameter to inline function
+        val inlineLams = lambdaExprs.filter (ElementFilters.lambdaAsArgForInlineFun::isAccepted)
+        // Return found methodcalls + explore lambdas
+        return methodCalls + inlineLams.flatMap(::extractCallsFromBody)
     }
 
     private fun exploreFunDeclaration(currentPsiEl: PsiElement, currentNode: FunctionNode) {
         // If explored stop
         if (currentNode.visited) return
         currentNode.visited = true
-        //Find all calls from this runBlocking context
-        val methodCalls = MyPsiUtils.findAllChildren(currentPsiEl, { it is KtCallExpression },
-            { ElementFilters.launchBuilder.isAccepted(it)
-                    || ElementFilters.asyncBuilder.isAccepted(it)
-                    || ElementFilters.runBlockingBuilderInvocation.isAccepted(it)
-            }).filterIsInstance<KtCallExpression>()
+        //Find all calls from this code block
 
+        val methodCalls = extractCallsFromBody(currentPsiEl)
+        
         for (call in methodCalls) {
             // Find method decl for call
             val psiFn = call.calleeExpression?.reference?.resolve()
             if (psiFn is KtNamedFunction) {
                 // if method in non-relevant file skip call.calleeExpression.reference.resolve()
                 val funFile = MyPsiUtils.getFileForElement(psiFn)
-                if (!relevantFiles.contains(funFile)) return
+                if (!relevantFiles.contains(funFile)) continue
 
                 // Find all function overrides
                 val toExplore = mutableListOf<KtNamedFunction>()

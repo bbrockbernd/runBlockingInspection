@@ -1,7 +1,9 @@
 package com.example.runBlockingInspection.utils
 
 import com.intellij.psi.util.PsiElementFilter
+import org.jetbrains.kotlin.idea.base.psi.hasInlineModifier
 import org.jetbrains.kotlin.psi.KtCallExpression
+import org.jetbrains.kotlin.psi.KtLambdaExpression
 import org.jetbrains.kotlin.psi.KtNameReferenceExpression
 import org.jetbrains.kotlin.psi.KtNamedFunction
 import org.jetbrains.kotlin.psi.psiUtil.hasSuspendModifier
@@ -56,7 +58,47 @@ class ElementFilters {
             }
             false
         }
-
+        
+        val inlineFunctionCall = PsiElementFilter { el ->
+            if (el is KtCallExpression) {
+                val callee = el.calleeExpression
+                if (callee is KtNameReferenceExpression) {
+                    val funDef = callee.reference?.resolve()
+                    if (funDef is KtNamedFunction) {
+                        return@PsiElementFilter funDef.hasInlineModifier()
+                    }
+                }
+            }
+            false
+        }
+        
+        val lambdaAsArgForInlineFun = PsiElementFilter { el ->
+            if (el is KtLambdaExpression) {
+                val funCall = MyPsiUtils.findParent(el, { it is KtCallExpression }, {false})?: return@PsiElementFilter false
+                return@PsiElementFilter inlineFunctionCall.isAccepted(funCall)
+            }
+            false
+        }
+        
+        
+        val isSuspendLambda = PsiElementFilter { el ->
+            if (el is KtLambdaExpression) {
+                if (el.functionLiteral.modifierList?.hasSuspendModifier() == true) 
+                    return@PsiElementFilter true
+                val funCall = (MyPsiUtils.findParent(el, { it is KtCallExpression }, {false})?: return@PsiElementFilter false) as KtCallExpression
+                val callee = funCall.calleeExpression
+                if (callee is KtNameReferenceExpression) {
+                    val funDef = callee.reference?.resolve()
+                    if (funDef is KtNamedFunction) {
+                        funDef.valueParameters.forEach {parameter -> 
+                            if (parameter.typeReference?.modifierList?.hasSuspendModifier() == true) return@PsiElementFilter true
+                        }
+                    }
+                }
+            }
+            false
+        }
+        
         val runBlockingBuilderDeclaration = PsiElementFilter { it is KtNamedFunction && it.fqName?.toString() == "kotlinx.coroutines.runBlocking" }
         val launchBuilderDeclaration = PsiElementFilter { it is KtNamedFunction && it.fqName?.toString() == "kotlinx.coroutines.launch" }
         val asyncBuilderDeclaration = PsiElementFilter { it is KtNamedFunction && it.fqName?.toString() == "kotlinx.coroutines.async" }

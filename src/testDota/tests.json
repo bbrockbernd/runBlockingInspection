@@ -189,6 +189,145 @@
     {"name": "Interface(Declared) -> SubRight(Initialized) || SubLeft (runBlocking)",
       "inputFiles": ["TwoSubOnlyLeftFP.kt"],
       "results": []
+    },
+
+    {"name": "Inline fun lambda arg",
+      "inputFiles": ["InlineLambda.kt"],
+      "results": [{"trace":  [
+        {
+          "fqName": "lambdas.InlineLambda.foo",
+          "file":  "InlineLambda.kt",
+          "offset": 94
+        }, {
+          "fqName":  "--> runBlocking",
+          "file":  "InlineLambda.kt",
+          "offset": 141
+        }]},
+        {"trace": [{
+          "fqName": "lambdas.InlineLambda.foo",
+          "file":  "InlineLambda.kt",
+          "offset": 94
+        }, {
+          "fqName":  "--> runBlocking",
+          "file":  "InlineLambda.kt",
+          "offset": 180
+        }]},
+        {"trace":[{
+          "fqName": "lambdas.InlineLambda.foo",
+          "file":  "InlineLambda.kt",
+          "offset": 94
+        }, {
+          "fqName":  "--> runBlocking",
+          "file":  "InlineLambda.kt",
+          "offset": 213
+        }
+      ]}]
+    },
+    
+    {"name": "Inline fun lambda arg indirect async context",
+      "inputFiles": ["InlineLambdaIndirect.kt"],
+      "results": [{"trace":  [
+        {
+          "fqName": "lambdas.InlineLambdaIndirect.startFoo",
+          "file":  "InlineLambdaIndirect.kt",
+          "offset": 106
+        },
+        {
+          "fqName": "lambdas.InlineLambdaIndirect.foo",
+          "file":  "InlineLambdaIndirect.kt",
+          "offset": 127
+        },
+        {
+          "fqName":  "--> runBlocking",
+          "file":  "InlineLambdaIndirect.kt",
+          "offset": 199
+        }]},
+        {"trace": [
+          {
+            "fqName": "lambdas.InlineLambdaIndirect.startFoo",
+            "file":  "InlineLambdaIndirect.kt",
+            "offset": 106
+          },
+          {
+          "fqName": "lambdas.InlineLambdaIndirect.foo",
+          "file":  "InlineLambdaIndirect.kt",
+          "offset": 127
+        },
+          {
+          "fqName":  "--> runBlocking",
+          "file":  "InlineLambdaIndirect.kt",
+          "offset": 238
+        }]},
+        {"trace":[
+          {
+            "fqName": "lambdas.InlineLambdaIndirect.startFoo",
+            "file":  "InlineLambdaIndirect.kt",
+            "offset": 106
+          },
+          {
+            "fqName": "lambdas.InlineLambdaIndirect.foo",
+            "file":  "InlineLambdaIndirect.kt", 
+            "offset": 127
+          }, 
+          {
+            "fqName":  "--> runBlocking",
+          "file":  "InlineLambdaIndirect.kt",
+          "offset": 271
+        }
+        ]}]
+    },
+    
+    {"name": "Inline fun lambda arg indirect runBlocking calls",
+      "inputFiles": ["InlineLambdaIndirect2.kt"],
+      "results": [{"trace":  [
+        {
+          "fqName": "lambdas.InlineLambdaIndirect2.foo",
+          "file":  "InlineLambdaIndirect2.kt",
+          "offset": 103
+        },
+        {
+          "fqName":  "lambdas.InlineLambdaIndirect2.indirectRunBlocking1",
+          "file":  "InlineLambdaIndirect2.kt",
+          "offset": 150
+        },
+        {
+          "fqName":  "--> runBlocking",
+          "file":  "InlineLambdaIndirect2.kt",
+          "offset": 454
+        }
+      ]},
+        {"trace": [{
+          "fqName": "lambdas.InlineLambdaIndirect2.foo",
+          "file":  "InlineLambdaIndirect2.kt",
+          "offset": 103
+        },
+          {
+            "fqName":  "lambdas.InlineLambdaIndirect2.indirectRunBlocking2",
+            "file":  "InlineLambdaIndirect2.kt",
+            "offset": 195
+          },
+          {
+          "fqName":  "--> runBlocking",
+          "file":  "InlineLambdaIndirect2.kt",
+          "offset": 524
+        }]},
+        {"trace":[
+          {
+          "fqName": "lambdas.InlineLambdaIndirect2.foo",
+          "file":  "InlineLambdaIndirect2.kt",
+            "offset": 103
+        },
+          {
+            "fqName":  "lambdas.InlineLambdaIndirect2.indirectRunBlocking3",
+            "file":  "InlineLambdaIndirect2.kt",
+            "offset": 234
+          },
+          {
+          "fqName":  "--> runBlocking",
+          "file":  "InlineLambdaIndirect2.kt",
+          "offset": 594
+        }
+        ]}]
     }
   ]
 }

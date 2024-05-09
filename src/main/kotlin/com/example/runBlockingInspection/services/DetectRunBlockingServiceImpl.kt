@@ -1,9 +1,9 @@
 package com.example.runBlockingInspection.services
 
-import com.example.runBlockingInspection.callgraph.CallEdge
-import com.example.runBlockingInspection.callgraph.FunctionNode
-import com.example.runBlockingInspection.callgraph.GraphBuilder
-import com.example.runBlockingInspection.callgraph.RBGraph
+import com.example.runBlockingInspection.rbgraph.CallEdge
+import com.example.runBlockingInspection.rbgraph.FunctionNode
+import com.example.runBlockingInspection.rbgraph.GraphBuilder
+import com.example.runBlockingInspection.rbgraph.RBGraph
 import com.example.runBlockingInspection.utils.ElementFilters
 import com.example.runBlockingInspection.utils.MyPsiUtils
 import com.example.runBlockingInspection.RunBlockingInspection
@@ -14,9 +14,9 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.ProjectFileIndex
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiElement
-import com.intellij.psi.util.PsiTreeUtil
 import org.jetbrains.kotlin.idea.KotlinFileType
 import org.jetbrains.kotlin.psi.KtCallExpression
+import org.jetbrains.kotlin.psi.KtLambdaExpression
 import org.jetbrains.kotlin.psi.KtNamedFunction
 import org.jetbrains.kotlin.util.collectionUtils.concat
 
@@ -42,12 +42,16 @@ internal class DetectRunBlockingServiceImpl(override val project: Project) : Det
 
     private fun analyzeRunBlocking(element: PsiElement): List<Pair<String, String>>? {
         // Find first interesting parent if any, Aka function definition or async builder
-        val psiFunOrBuilder = PsiTreeUtil.findFirstParent(element, true) {
+        val psiFunOrBuilder = MyPsiUtils.findParent(element.parent, {
             it is KtNamedFunction
                     || ElementFilters.launchBuilder.isAccepted(it)
                     || ElementFilters.asyncBuilder.isAccepted(it)
                     || ElementFilters.runBlockingBuilderInvocation.isAccepted(it)
-        }
+        }, { 
+            it is KtLambdaExpression 
+                    && !ElementFilters.lambdaAsArgForInlineFun.isAccepted(it)
+                    && !ElementFilters.isSuspendLambda.isAccepted(it)
+        })
 
         // If found element is function def, check if it runs in coroutine
         if (psiFunOrBuilder is KtNamedFunction) {
