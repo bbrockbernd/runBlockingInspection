@@ -86,10 +86,10 @@ class RunBlockingInspectionPresentation(
     }
 
 
-    private fun getDescription(callStack: List<Pair<String, String>>): String {
+    private fun getDescription(callStack: List<TraceElement>): String {
         return buildString {
             append("<div class=\"problem-description\"><h>${RunBlockingInspectionBundle.message("presentation.text")}</h><p><ul>")
-            callStack.forEach { append("<li><a HREF=${it.second}>${it.first}</a></li>") }
+            callStack.forEach { append("<li><a HREF=${it.url}>${it.fgName} (${it.fileAndLine})</a></li>") }
             append("</ul></p></div>")
         }
     }

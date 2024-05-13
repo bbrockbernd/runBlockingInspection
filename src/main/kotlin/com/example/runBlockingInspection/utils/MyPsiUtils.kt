@@ -7,6 +7,7 @@ import com.intellij.psi.PsiFileSystemItem
 import com.intellij.psi.PsiManager
 import com.intellij.psi.PsiRecursiveElementVisitor
 import com.intellij.psi.util.PsiTreeUtil
+import com.intellij.testFramework.utils.editor.getVirtualFile
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtNamedFunction
 
@@ -41,9 +42,10 @@ class MyPsiUtils {
             return null
         }
         
-        fun getLineNumber(psiElement: PsiElement) : Int {
-            val document = psiElement.containingFile.viewProvider.document
-            return document?.getLineNumber(psiElement.textRange.startOffset)?.plus(1) ?: -1
+        fun getFileAndLine(element: PsiElement): String? {
+            val document = element.containingFile.viewProvider.document
+            val lineNr = document?.getLineNumber(element.textRange.startOffset)?.plus(1) ?: -1
+            return "${element.containingFile.name}:${lineNr}"
         }
         
         fun getUrl(element: PsiElement): String? {

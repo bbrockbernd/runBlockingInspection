@@ -55,10 +55,10 @@ class RBGraph {
      * @param parent The parent function node.
      * @param child The child function node.
      * @param callSite The call site where the connection is made.
-     * @param strongConnection Indicates whether the connection is a strong connection or not.
+     * @param lineAndFile Something like: File.kt:1.
      */
-    fun connect(parent: FunctionNode, child: FunctionNode, callSite: String, strongConnection: Boolean = true) =
-        connect(parent.id, child.id, callSite, strongConnection)
+    fun connect(parent: FunctionNode, child: FunctionNode, callSite: String, lineAndFile: String) =
+        connect(parent.id, child.id, callSite, lineAndFile)
     
     
     /**
@@ -67,15 +67,15 @@ class RBGraph {
      * @param parentId The id of the parent function node.
      * @param childId The id of the child function node.
      * @param callSite The call site where the connection is made.
-     * @param strongConnection Indicates whether the connection is a strong connection or not.
+     * @param lineAndFile Something like: File.kt:1.
      */
-    fun connect(parentId: String, childId: String, callSite: String, strongConnection: Boolean = true) {
+    fun connect(parentId: String, childId: String, callSite: String, lineAndFile: String) {
         // Happy path
         if (isConnected(parentId, childId)) return
         
         val parent = functionMap[parentId]!!
         val child = functionMap[childId]!!
-        val newCallEdge = CallEdge(parent, child, callSite, strongConnection)
+        val newCallEdge = CallEdge(parent, child, callSite, lineAndFile)
         edges.add(newCallEdge)
         parent.addChild(newCallEdge)
         child.addParent(newCallEdge)

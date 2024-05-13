@@ -152,7 +152,7 @@ class GraphBuilder(private val project: Project) {
                         // Get or create function node and explore
                         val functionNode = rbGraph.getOrCreateFunction(fn)
                         // If no overrides -> Strong connection 
-                        rbGraph.connect(currentNode, functionNode, MyPsiUtils.getUrl(call)!!, toExplore.size == 1)
+                        rbGraph.connect(currentNode, functionNode, MyPsiUtils.getUrl(call)!!, MyPsiUtils.getFileAndLine(call)!!)
                         exploreFunDeclaration(fn, functionNode)
                     }
                 }

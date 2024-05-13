@@ -1,5 +1,6 @@
 package com.example.runBlockingInspection.services
 
+import com.android.annotations.Trace
 import com.example.runBlockingInspection.rbgraph.CallEdge
 import com.example.runBlockingInspection.rbgraph.FunctionNode
 import com.example.runBlockingInspection.rbgraph.GraphBuilder
@@ -8,6 +9,7 @@ import com.example.runBlockingInspection.utils.ElementFilters
 import com.example.runBlockingInspection.utils.MyPsiUtils
 import com.example.runBlockingInspection.RunBlockingInspection
 import com.example.runBlockingInspection.RunBlockingInspectionBundle
+import com.example.runBlockingInspection.TraceElement
 import com.intellij.analysis.AnalysisScope
 import com.intellij.analysis.problemsView.ProblemsProvider
 import com.intellij.openapi.project.Project
@@ -26,7 +28,7 @@ internal class DetectRunBlockingServiceImpl(override val project: Project) : Det
     private val rbFiles = mutableSetOf<VirtualFile>()
     private var rbGraph = RBGraph()
 
-    private val resultsMemo = mutableMapOf<String, List<Pair<String, String>>?>()
+    private val resultsMemo = mutableMapOf<String, List<TraceElement>?>()
 
     /**
      * Analyzes the given [element] to determine if it is running inside a coroutine and returns a stack trace
@@ -37,10 +39,10 @@ internal class DetectRunBlockingServiceImpl(override val project: Project) : Det
      * @return A list of pairs representing the function name and its call/decl site if the given [element]
      *         is running inside a coroutine, null otherwise.
      */
-    override fun checkRunBlocking(element: PsiElement): List<Pair<String, String>>? =
+    override fun checkRunBlocking(element: PsiElement): List<TraceElement>? =
         MyPsiUtils.getUrl(element)?.let { resultsMemo.computeIfAbsent(it) { analyzeRunBlocking(element) } }
 
-    private fun analyzeRunBlocking(element: PsiElement): List<Pair<String, String>>? {
+    private fun analyzeRunBlocking(element: PsiElement): List<TraceElement>? {
         // Find first interesting parent if any, Aka function definition or async builder
         val psiFunOrBuilder = MyPsiUtils.findParent(element.parent, {
             it is KtNamedFunction
@@ -70,10 +72,15 @@ internal class DetectRunBlockingServiceImpl(override val project: Project) : Det
             val ktFun: KtNamedFunction = psiFunOrBuilder.calleeExpression?.reference?.resolve() as KtNamedFunction
             val fqName: String = ktFun.fqName.toString()
             return listOf(
-                Pair(fqName, MyPsiUtils.getUrl(psiFunOrBuilder) ?: ""),
-                Pair(
+                TraceElement(
+                    fqName, 
+                    MyPsiUtils.getUrl(psiFunOrBuilder) ?: "", 
+                    MyPsiUtils.getFileAndLine(psiFunOrBuilder) ?: ""
+                ),
+                TraceElement(
                     RunBlockingInspectionBundle.message("analysis.found.runblocking"),
-                    MyPsiUtils.getUrl(element) ?: ""
+                    MyPsiUtils.getUrl(element) ?: "",
+                    MyPsiUtils.getFileAndLine(element) ?: ""
                 )
             )
         }
@@ -87,19 +94,21 @@ internal class DetectRunBlockingServiceImpl(override val project: Project) : Det
         callEdgeTrace: List<CallEdge>,
         funNode: FunctionNode,
         element: PsiElement
-    ): MutableList<Pair<String, String>> {
+    ): MutableList<TraceElement> {
         val stackTrace =
-            if (callEdgeTrace.size != 0) mutableListOf<Pair<String, String>>(Pair(
+            if (callEdgeTrace.size != 0) mutableListOf<TraceElement>(TraceElement(
                     callEdgeTrace[0].parent.fqName,
-                    callEdgeTrace[0].parent.declarationSite))
-            else mutableListOf<Pair<String, String>>(Pair(funNode.fqName, funNode.declarationSite))
+                    callEdgeTrace[0].parent.declarationSite,
+                    callEdgeTrace[0].parent.fileAndLine))
+            else mutableListOf<TraceElement>(TraceElement(funNode.fqName, funNode.declarationSite, funNode.fileAndLine))
 
         for (i in 0..<callEdgeTrace.size) {
-            stackTrace.add(Pair(callEdgeTrace[i].child.fqName, callEdgeTrace[i].callSite))
+            stackTrace.add(TraceElement(callEdgeTrace[i].child.fqName, callEdgeTrace[i].callSite, callEdgeTrace[i].fileAndLine))
         }
-        stackTrace.add(Pair(
+        stackTrace.add(TraceElement(
                 RunBlockingInspectionBundle.message("analysis.found.runblocking"),
-                MyPsiUtils.getUrl(element) ?: ""
+                MyPsiUtils.getUrl(element) ?: "",
+            MyPsiUtils.getFileAndLine(element) ?: ""
             ))
         return stackTrace
     }

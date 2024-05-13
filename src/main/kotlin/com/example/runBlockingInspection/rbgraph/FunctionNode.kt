@@ -17,7 +17,7 @@ class FunctionNode(
     val id: String, 
     val declarationSite: String,
     val fqName: String,
-    val classFqName: String,
+    val fileAndLine: String,
     val isSuspend: Boolean
 ) {
     
@@ -25,7 +25,7 @@ class FunctionNode(
         generateId(psiFun), 
         MyPsiUtils.getUrl(psiFun) ?: "",
         psiFun.fqName.toString(),
-        psiFun.containingClassOrObject?.let{ it.fqName.toString()} ?: "",
+        MyPsiUtils.getFileAndLine(psiFun) ?: "",
         ElementFilters.suspendFun.isAccepted(psiFun)
         )
     
