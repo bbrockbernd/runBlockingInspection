@@ -42,7 +42,7 @@ class SimpleRunBlockingTest: LightJavaCodeInsightFixtureTestCase() {
     
     @TestFactory
     fun runIndividualTest(): Collection<DynamicTest> {
-        val testIndex = 11
+        val testIndex = 1
         return listOf(runTest(myTests.tests[testIndex]))
     }
     
@@ -83,20 +83,20 @@ class SimpleRunBlockingTest: LightJavaCodeInsightFixtureTestCase() {
             val expectedRBUrl = "temp:///src/${expectation.trace.last().file}#${expectation.trace.last().offset}"
             val foundTrace = foundResults.firstOrNull { 
                 if (checkOffsets) {
-                    it.stacTrace.last().second == expectedRBUrl
+                    it.stacTrace.last().url == expectedRBUrl
                 } else {
-                    it.stacTrace.last().second.split("#")[0] == expectedRBUrl.split("#")[0]
+                    it.stacTrace.last().url.split("#")[0] == expectedRBUrl.split("#")[0]
                 }
             }
             
             //Verify runBlocking found
             Assertions.assertNotNull(foundTrace, "Following runBlocking not detected: $expectedRBUrl")
             //Verify files
-            Assertions.assertArrayEquals(expectation.trace.map {"temp:///src/${it.file}"}.toTypedArray(), foundTrace!!.stacTrace.map {it.second.split("#")[0]}.toTypedArray())
+            Assertions.assertArrayEquals(expectation.trace.map {"temp:///src/${it.file}"}.toTypedArray(), foundTrace!!.stacTrace.map {it.url.split("#")[0]}.toTypedArray())
             //Verify offsets
-            if (checkOffsets) Assertions.assertArrayEquals(expectation.trace.map {it.offset.toString()}.toTypedArray(), foundTrace!!.stacTrace.map {it.second.split("#")[1]}.toTypedArray())
+            if (checkOffsets) Assertions.assertArrayEquals(expectation.trace.map {it.offset.toString()}.toTypedArray(), foundTrace!!.stacTrace.map {it.url.split("#")[1]}.toTypedArray())
             //Verify fqNames
-            Assertions.assertArrayEquals(expectation.trace.map {it.fqName}.toTypedArray(), foundTrace.stacTrace.map {it.first}.toTypedArray())
+            Assertions.assertArrayEquals(expectation.trace.map {it.fqName}.toTypedArray(), foundTrace.stacTrace.map {it.fgName}.toTypedArray())
         }
     }
     
